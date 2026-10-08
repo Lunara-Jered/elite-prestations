@@ -19,7 +19,7 @@ dependencies:
   
   # UI
   cupertino_icons: ^2.0.0
-  google_fonts: ^9.0.0
+  google_fonts: ^8.0.0
   cached_network_image: ^4.0.4
   flutter_svg: ^2.0.17
   
