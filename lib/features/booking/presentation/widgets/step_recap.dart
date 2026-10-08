@@ -1,3 +1,4 @@
+// TODO: Implement the booking recap step.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -73,7 +74,7 @@ class StepRecap extends ConsumerWidget {
                 ...booking.options
                     .where((o) => o.quantity > 0)
                     .map((o) => _Line(
-                          label: '${o.emoji} ${o.name} × ${o.quantity}',
+                          label: '${o.name} × ${o.quantity}',
                           amount: o.total,
                         )),
               ],
