@@ -27,18 +27,18 @@ class _MainShellState extends ConsumerState<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final isLight = Theme.of(context).brightness == Brightness.light;
+
     return Scaffold(
       body: widget.child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).cardColor,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 12,
-              offset: const Offset(0, -4),
+          color: isLight ? AppColors.surface : AppColors.surfaceDark,
+          border: Border(
+            top: BorderSide(
+              color: isLight ? AppColors.border : AppColors.borderDark,
             ),
-          ],
+          ),
         ),
         child: SafeArea(
           top: false,
@@ -49,12 +49,17 @@ class _MainShellState extends ConsumerState<MainShell> {
               context.go(_routes[index]);
             },
             type: BottomNavigationBarType.fixed,
-            backgroundColor: Theme.of(context).cardColor,
-            selectedItemColor: AppColors.accent,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            selectedItemColor:
+                isLight ? AppColors.primary : AppColors.white,
             unselectedItemColor: AppColors.textMuted,
             selectedFontSize: 11,
             unselectedFontSize: 11,
-            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+            selectedLabelStyle:
+                const TextStyle(fontWeight: FontWeight.w600),
+            unselectedLabelStyle:
+                const TextStyle(fontWeight: FontWeight.w500),
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
