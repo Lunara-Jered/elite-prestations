@@ -1,4 +1,3 @@
-// TODO: Implement the booking summary step.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -209,4 +208,74 @@ class _Line extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: Text
+            child: Text(label, style: const TextStyle(fontSize: 14)),
+          ),
+          Text(
+            _formatPrice(amount),
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatPrice(int amount) {
+    final str = amount.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(' ');
+      buffer.write(str[i]);
+    }
+    return '$buffer FCFA';
+  }
+}
+
+class _PriceLine extends StatelessWidget {
+  final String label;
+  final int amount;
+  final bool bold;
+  final bool big;
+
+  const _PriceLine({
+    required this.label,
+    required this.amount,
+    this.bold = false,
+    this.big = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              fontSize: big ? 16 : 14,
+            ),
+          ),
+          Text(
+            _formatPrice(amount),
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+              fontSize: big ? 18 : 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatPrice(int amount) {
+    final str = amount.toString();
+    final buffer = StringBuffer();
+    for (int i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(' ');
+      buffer.write(str[i]);
+    }
+    return '$buffer FCFA';
+  }
+}
