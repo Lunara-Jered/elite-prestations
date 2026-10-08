@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency.dart';
 import '../../providers/booking_provider.dart';
 
 class StepRecap extends ConsumerWidget {
@@ -122,7 +123,7 @@ class StepRecap extends ConsumerWidget {
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     Text(
-                      _formatPrice(booking.deposit),
+                      formatFCFA(booking.deposit),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -211,22 +212,12 @@ class _Line extends StatelessWidget {
             child: Text(label, style: const TextStyle(fontSize: 14)),
           ),
           Text(
-            _formatPrice(amount),
+            formatFCFA(amount),
             style: const TextStyle(fontSize: 14),
           ),
         ],
       ),
     );
-  }
-
-  String _formatPrice(int amount) {
-    final str = amount.toString();
-    final buffer = StringBuffer();
-    for (int i = 0; i < str.length; i++) {
-      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(' ');
-      buffer.write(str[i]);
-    }
-    return '$buffer FCFA';
   }
 }
 
@@ -258,7 +249,7 @@ class _PriceLine extends StatelessWidget {
             ),
           ),
           Text(
-            _formatPrice(amount),
+            formatFCFA(amount),
             style: TextStyle(
               fontWeight: bold ? FontWeight.bold : FontWeight.normal,
               fontSize: big ? 18 : 14,
@@ -267,15 +258,5 @@ class _PriceLine extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _formatPrice(int amount) {
-    final str = amount.toString();
-    final buffer = StringBuffer();
-    for (int i = 0; i < str.length; i++) {
-      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(' ');
-      buffer.write(str[i]);
-    }
-    return '$buffer FCFA';
   }
 }
