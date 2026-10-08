@@ -127,9 +127,10 @@ class BookingState {
   }
 }
 
-/// Notifier du booking
-class BookingNotifier extends StateNotifier<BookingState> {
-  BookingNotifier() : super(const BookingState());
+/// Notifier du booking (API moderne Riverpod 2.x)
+class BookingNotifier extends Notifier<BookingState> {
+  @override
+  BookingState build() => const BookingState();
 
   void nextStep() {
     if (state.currentStep < 5 && state.isCurrentStepValid) {
@@ -196,8 +197,6 @@ class BookingNotifier extends StateNotifier<BookingState> {
   }
 }
 
-/// Provider global
+/// Provider global (API moderne)
 final bookingProvider =
-    StateNotifierProvider<BookingNotifier, BookingState>((ref) {
-  return BookingNotifier();
-});
+    NotifierProvider<BookingNotifier, BookingState>(BookingNotifier.new);
