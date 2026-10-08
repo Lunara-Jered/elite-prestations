@@ -32,27 +32,18 @@ class StepDate extends ConsumerWidget {
           label: 'Date de début',
           date: booking.startDate,
           onTap: () async {
+            final now = DateTime.now();
+            final initial = booking.startDate ?? now;
+
             final picked = await showDatePicker(
               context: context,
-              initialDate: booking.startDate ?? DateTime.now(),
-              firstDate: DateTime.now(),
-              lastDate: DateTime.now().add(const Duration(days: 365)),
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: isLight
-                        ? const ColorScheme.light(
-                            primary: AppColors.primary,
-                            onPrimary: AppColors.white,
-                          )
-                        : const ColorScheme.dark(
-                            primary: AppColors.white,
-                            onPrimary: AppColors.primary,
-                          ),
-                  ),
-                  child: child!,
-                );
-              },
+              initialDate: initial.isBefore(now) ? now : initial,
+              firstDate: now,
+              lastDate: now.add(const Duration(days: 365)),
+              locale: const Locale('fr', 'FR'),
+              helpText: 'Sélectionnez la date de début',
+              cancelText: 'Annuler',
+              confirmText: 'Valider',
             );
 
             if (picked != null) {
