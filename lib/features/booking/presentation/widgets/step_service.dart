@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../providers/services_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../../../core/utils/currency.dart';
 
 class StepService extends ConsumerWidget {
   const StepService({super.key});
@@ -70,7 +71,7 @@ class StepService extends ConsumerWidget {
                           const SizedBox(height: 4),
                           Text(
                             service.basePrice > 0
-                                ? 'Dès ${_formatPrice(service.basePrice)} / ${service.unit}'
+                                ? 'Dès ${formatFCFA(service.basePrice)} / ${service.unit}'
                                 : 'Sur devis',
                             style: TextStyle(
                               fontSize: 13,
@@ -100,15 +101,5 @@ class StepService extends ConsumerWidget {
         }),
       ],
     );
-  }
-
-  String _formatPrice(int amount) {
-    final str = amount.toString();
-    final buffer = StringBuffer();
-    for (int i = 0; i < str.length; i++) {
-      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(' ');
-      buffer.write(str[i]);
-    }
-    return '$buffer FCFA';
   }
 }
