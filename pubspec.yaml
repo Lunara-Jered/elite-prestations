@@ -1,16 +1,34 @@
 name: elite_prestations
-description: Application Elite Prestations.
+description: Application mobile Élite Prestations - Agence événementielle au Gabon
 publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.24.0'
 
 dependencies:
   flutter:
     sdk: flutter
-
+  
+  # Navigation
+  go_router: ^14.6.2
+  
+  # State management
+  flutter_riverpod: ^2.6.1
+  
+  # UI
   cupertino_icons: ^1.0.8
+  google_fonts: ^6.2.1
+  cached_network_image: ^3.4.1
+  flutter_svg: ^2.0.17
+  
+  # Utilitaires
+  intl: ^0.20.2
+  shared_preferences: ^2.3.5
+  
+  # Animations
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
@@ -19,3 +37,21 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/icons/
+  
+  fonts:
+    - family: PlayfairDisplay
+      fonts:
+        - asset: assets/fonts/PlayfairDisplay-Regular.ttf
+        - asset: assets/fonts/PlayfairDisplay-Bold.ttf
+          weight: 700
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
