@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/router/app_router.dart';
@@ -14,9 +15,27 @@ class ElitePrestationsApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Élite Prestations',
       debugShowCheckedModeBanner: false,
+
+      // ─────────────────────────────────────────
+      // LOCALISATION
+      // ─────────────────────────────────────────
+      locale: const Locale('fr', 'FR'),
+      supportedLocales: const [
+        Locale('fr', 'FR'),
+        Locale('en', 'US'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+
+      // Thème
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.light,
+
+      // Navigation
       routerConfig: router,
     );
   }
