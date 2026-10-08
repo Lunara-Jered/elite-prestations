@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/main_shell.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/services/presentation/services_screen.dart';
+import '../../features/services/presentation/service_detail_screen.dart';
 import '../../features/reservations/presentation/reservation_screen.dart';
 import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
@@ -47,6 +48,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/sign-up',
         name: 'signUp',
         builder: (context, state) => const SignUpScreen(),
+      ),
+      
+      // ─────────────────────────────────────────
+      // DÉTAIL SERVICE (hors ShellRoute → plein écran)
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/services/:slug',
+        name: 'serviceDetail',
+        builder: (context, state) {
+          final slug = state.pathParameters['slug']!;
+          return ServiceDetailScreen(slug: slug);
+        },
       ),
       
       // ─────────────────────────────────────────
