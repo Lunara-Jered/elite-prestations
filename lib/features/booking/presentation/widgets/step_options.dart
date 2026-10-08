@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency.dart';
 import '../../providers/booking_provider.dart';
 
 class StepOptions extends ConsumerWidget {
@@ -99,7 +100,7 @@ class StepOptions extends ConsumerWidget {
                         const SizedBox(height: 2),
                         Text(
                           option.unitPrice > 0
-                              ? '${_formatPrice(option.unitPrice)}${option.perPerson ? ' / personne' : ''}'
+                              ? '${formatFCFA(option.unitPrice)}${option.perPerson ? ' / personne' : ''}'
                               : 'Sur devis',
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -156,16 +157,6 @@ class StepOptions extends ConsumerWidget {
         }),
       ],
     );
-  }
-
-  String _formatPrice(int amount) {
-    final str = amount.toString();
-    final buffer = StringBuffer();
-    for (int i = 0; i < str.length; i++) {
-      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(' ');
-      buffer.write(str[i]);
-    }
-    return '$buffer FCFA';
   }
 }
 
