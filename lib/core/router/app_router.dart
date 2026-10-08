@@ -14,6 +14,7 @@ import '../../features/admin/presentation/dashboard_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
+import '../../features/booking/presentation/booking_screen.dart';
 
 /// Clés de navigation globales (pour naviguer depuis n'importe où)
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
