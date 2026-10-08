@@ -7,7 +7,7 @@ import '../../../providers/services_provider.dart';
 class BookingOption {
   final String id;
   final String name;
-  final String emoji;
+  final String iconName; // ← nom d'icône Material (ex: 'restaurant')
   final int unitPrice;
   final bool perPerson;
   final int quantity;
@@ -15,7 +15,7 @@ class BookingOption {
   const BookingOption({
     required this.id,
     required this.name,
-    required this.emoji,
+    required this.iconName,
     required this.unitPrice,
     this.perPerson = false,
     this.quantity = 0,
@@ -27,7 +27,7 @@ class BookingOption {
     return BookingOption(
       id: id,
       name: name,
-      emoji: emoji,
+      iconName: iconName,
       unitPrice: unitPrice,
       perPerson: perPerson,
       quantity: quantity ?? this.quantity,
@@ -65,13 +65,11 @@ class BookingState {
   int get subtotalHT {
     if (selectedService == null) return 0;
 
-    // Prix du service (basePrice × durée pour salle/appartement)
     int serviceTotal = selectedService!.basePrice;
     if (selectedService!.unit == 'jour' || selectedService!.unit == 'nuit') {
       serviceTotal = selectedService!.basePrice * duration;
     }
 
-    // Options
     final optionsTotal = options.fold(0, (sum, o) => sum + o.total);
 
     return serviceTotal + optionsTotal;
@@ -116,7 +114,7 @@ class BookingState {
       case 2:
         return startDate != null && duration > 0;
       case 3:
-        return true; // options facultatives
+        return true;
       case 4:
         return true;
       case 5:
@@ -197,6 +195,6 @@ class BookingNotifier extends Notifier<BookingState> {
   }
 }
 
-/// Provider global (API moderne)
+/// Provider global
 final bookingProvider =
     NotifierProvider<BookingNotifier, BookingState>(BookingNotifier.new);
