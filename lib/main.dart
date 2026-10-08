@@ -1,7 +1,21 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'app.dart';
 
-void main() {
-  runApp(const ElitePrestationsApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Orientation portrait uniquement
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
+  runApp(
+    const ProviderScope(
+      child: ElitePrestationsApp(),
+    ),
+  );
 }
-
-export 'app.dart';
