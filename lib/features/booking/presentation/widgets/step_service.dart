@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency.dart';
 import '../../../../providers/services_provider.dart';
 import '../../providers/booking_provider.dart';
-import '../../../../core/utils/currency.dart';
 
 class StepService extends ConsumerWidget {
   const StepService({super.key});
