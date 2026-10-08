@@ -12,25 +12,25 @@ class StepPayment extends ConsumerWidget {
   static const List<_PaymentMethod> _methods = [
     _PaymentMethod(
       id: 'airtel',
-      emoji: '📱',
+      icon: Icons.smartphone,
       name: 'Airtel Money',
       description: 'Paiement mobile sécurisé',
     ),
     _PaymentMethod(
       id: 'moov',
-      emoji: '📱',
+      icon: Icons.smartphone,
       name: 'Moov Money',
       description: 'Paiement mobile sécurisé',
     ),
     _PaymentMethod(
       id: 'virement',
-      emoji: '🏦',
+      icon: Icons.account_balance,
       name: 'Virement bancaire',
       description: 'BICIG, BGFI, UGB…',
     ),
     _PaymentMethod(
       id: 'especes',
-      emoji: '💵',
+      icon: Icons.payments_outlined,
       name: 'Espèces sur place',
       description: 'Validation par notre équipe',
     ),
@@ -118,7 +118,13 @@ class StepPayment extends ConsumerWidget {
                 ),
                 child: Row(
                   children: [
-                    Text(method.emoji, style: const TextStyle(fontSize: 24)),
+                    Icon(
+                      method.icon,
+                      size: 24,
+                      color: isSelected
+                          ? (isLight ? AppColors.white : AppColors.primary)
+                          : (isLight ? AppColors.primary : AppColors.white),
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -180,13 +186,13 @@ class StepPayment extends ConsumerWidget {
 
 class _PaymentMethod {
   final String id;
-  final String emoji;
+  final IconData icon; // ← IconData au lieu de String emoji
   final String name;
   final String description;
 
   const _PaymentMethod({
     required this.id,
-    required this.emoji,
+    required this.icon,
     required this.name,
     required this.description,
   });
