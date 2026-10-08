@@ -128,7 +128,7 @@ class _BottomBar extends ConsumerWidget {
             child: Text(
               booking.currentStep < 5
                   ? 'Continuer'
-                  : '🔒 Confirmer le paiement',
+                  : 'Confirmer le paiement',
             ),
           ),
         ),
