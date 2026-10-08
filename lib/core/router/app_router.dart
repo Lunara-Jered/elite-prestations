@@ -1,58 +1,138 @@
-// TODO: Define application routes.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/main_shell.dart';
+import '../../features/home/presentation/home_screen.dart';
+import '../../features/services/presentation/services_screen.dart';
+import '../../features/reservations/presentation/reservation_screen.dart';
+import '../../features/messages/presentation/messages_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/admin/presentation/admin_shell.dart';
+import '../../features/admin/presentation/dashboard_screen.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/auth/presentation/sign_in_screen.dart';
+import '../../features/auth/presentation/sign_up_screen.dart';
+
+/// Clés de navigation globales (pour naviguer depuis n'importe où)
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
 /// Provider global du router
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/',
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/home',
     debugLogDiagnostics: true,
+    
     routes: [
-      // Route temporaire (accueil)
-      // On remplacera par les vraies routes au fur et à mesure
+      // ─────────────────────────────────────────
+      // ONBOARDING
+      // ─────────────────────────────────────────
       GoRoute(
-        path: '/',
-        name: 'home',
-        builder: (context, state) => const _PlaceholderScreen(),
+        path: '/onboarding',
+        name: 'onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      
+      // ─────────────────────────────────────────
+      // AUTHENTIFICATION
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/sign-in',
+        name: 'signIn',
+        builder: (context, state) => const SignInScreen(),
+      ),
+      GoRoute(
+        path: '/sign-up',
+        name: 'signUp',
+        builder: (context, state) => const SignUpScreen(),
+      ),
+      
+      // ─────────────────────────────────────────
+      // APPLICATION (avec bottom tabs)
+      // ─────────────────────────────────────────
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        builder: (context, state, child) => MainShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/home',
+            name: 'home',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: HomeScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/services',
+            name: 'services',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ServicesScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/reservations',
+            name: 'reservations',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ReservationScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/messages',
+            name: 'messages',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: MessagesScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/profile',
+            name: 'profile',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ProfileScreen(),
+            ),
+          ),
+        ],
+      ),
+      
+      // ─────────────────────────────────────────
+      // ADMIN (hors bottom tabs)
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/admin',
+        name: 'admin',
+        builder: (context, state) => const AdminShell(),
+        routes: [
+          GoRoute(
+            path: 'dashboard',
+            name: 'adminDashboard',
+            builder: (context, state) => const DashboardScreen(),
+          ),
+        ],
       ),
     ],
-  );
-});
-
-/// Écran temporaire pour tester le thème
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen();
-  
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'ÉLITE PRESTATIONS',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontFamily: 'PlayfairDisplay',
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'Le Meilleur Pour Vous',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 48),
-              ElevatedButton(
-                onPressed: () {},
-                child: const Text('Commencer'),
-              ),
-            ],
-          ),
+    
+    // Gestion des erreurs (route inconnue)
+    errorBuilder: (context, state) => Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Page introuvable',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(state.error?.toString() ?? ''),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => context.goNamed('home'),
+              child: const Text('Retour à l\'accueil'),
+            ),
+          ],
         ),
       ),
-    );
-  }
-}
+    ),
+  );
+});
