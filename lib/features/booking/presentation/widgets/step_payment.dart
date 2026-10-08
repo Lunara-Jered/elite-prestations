@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/utils/currency.dart';
 import '../../providers/booking_provider.dart';
 
 class StepPayment extends ConsumerWidget {
@@ -60,7 +61,7 @@ class StepPayment extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                _formatPrice(booking.deposit),
+                formatFCFA(booking.deposit),
                 style: const TextStyle(
                   color: AppColors.white,
                   fontSize: 28,
@@ -69,7 +70,7 @@ class StepPayment extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                'Acompte 50% • Reste ${_formatPrice(booking.totalTTC - booking.deposit)}',
+                'Acompte 50% • Reste ${formatFCFA(booking.totalTTC - booking.deposit)}',
                 style: const TextStyle(
                   color: AppColors.gray400,
                   fontSize: 12,
@@ -174,16 +175,6 @@ class StepPayment extends ConsumerWidget {
         ),
       ],
     );
-  }
-
-  String _formatPrice(int amount) {
-    final str = amount.toString();
-    final buffer = StringBuffer();
-    for (int i = 0; i < str.length; i++) {
-      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(' ');
-      buffer.write(str[i]);
-    }
-    return '$buffer FCFA';
   }
 }
 
