@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/utils/currency.dart';
+import '../../../../core/utils/icon_mapper.dart';
 import '../../providers/booking_provider.dart';
 
 class StepOptions extends ConsumerWidget {
@@ -14,7 +15,7 @@ class StepOptions extends ConsumerWidget {
     BookingOption(
       id: 'traiteur',
       name: 'Service Traiteur',
-      emoji: '🍽️',
+      iconName: 'restaurant',
       unitPrice: 15000,
       perPerson: true,
       quantity: 0,
@@ -22,21 +23,21 @@ class StepOptions extends ConsumerWidget {
     BookingOption(
       id: 'photo',
       name: 'Photographie & Vidéo',
-      emoji: '📸',
+      iconName: 'camera_alt',
       unitPrice: 350000,
       quantity: 0,
     ),
     BookingOption(
       id: 'sono',
       name: 'Sonorisation',
-      emoji: '🎵',
+      iconName: 'music_note',
       unitPrice: 150000,
       quantity: 0,
     ),
     BookingOption(
       id: 'transport',
       name: 'Transport invités',
-      emoji: '🚐',
+      iconName: 'directions_bus',
       unitPrice: 0,
       quantity: 0,
     ),
@@ -84,7 +85,11 @@ class StepOptions extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  Text(option.emoji, style: const TextStyle(fontSize: 24)),
+                  Icon(
+                    iconFromName(option.iconName),
+                    size: 24,
+                    color: isLight ? AppColors.primary : AppColors.white,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
