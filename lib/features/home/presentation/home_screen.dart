@@ -65,6 +65,15 @@ class _HeroCard extends StatelessWidget {
                 letterSpacing: 2,
               ),
             ),
+            const SizedBox(height: 8),
+                Text(
+                  'Le Meilleur Pour Vous',   // ← AJOUTE CETTE LIGNE
+                  style: TextStyle(
+                    color: AppColors.textMutedOnDark,
+                    fontSize: 14,
+                    letterSpacing: 1,
+                  ),
+                ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
