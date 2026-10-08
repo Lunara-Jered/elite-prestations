@@ -107,7 +107,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      
+      // ─────────────────────────────────────────
+      // RÉSERVATION (hors shell)
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/booking',
+        name: 'booking',
+        builder: (context, state) => const BookingScreen(),
+      ),
       // ─────────────────────────────────────────
       // ADMIN (hors bottom tabs)
       // ─────────────────────────────────────────
