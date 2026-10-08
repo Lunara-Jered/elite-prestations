@@ -71,12 +71,13 @@ class AppTextStyles {
     letterSpacing: 0.3,
   );
   
-  /// Prix (accent or)
-  static TextStyle price = GoogleFonts.inter(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-    color: AppColors.accent,
-  );
+  
+ /// Prix (noir élégant)
+static TextStyle price = GoogleFonts.inter(
+  fontSize: 20,
+  fontWeight: FontWeight.bold,
+  color: AppColors.textPrimary,
+);
   
   /// Label sur fond sombre
   static TextStyle labelOnDark = GoogleFonts.inter(
