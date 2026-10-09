@@ -7,6 +7,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/services/presentation/services_screen.dart';
 import '../../features/services/presentation/service_detail_screen.dart';
 import '../../features/reservations/presentation/reservation_screen.dart';
+import '../../features/reservations/presentation/reservation_detail_screen.dart';
 import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/admin/presentation/admin_shell.dart';
@@ -15,7 +16,6 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/booking/presentation/booking_screen.dart';
-import '../../features/reservations/presentation/reservation_detail_screen.dart';
 
 /// Clés de navigation globales (pour naviguer depuis n'importe où)
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -27,7 +27,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/home',
     debugLogDiagnostics: true,
-    
+
     routes: [
       // ─────────────────────────────────────────
       // ONBOARDING
@@ -37,7 +37,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      
+
       // ─────────────────────────────────────────
       // AUTHENTIFICATION
       // ─────────────────────────────────────────
@@ -51,7 +51,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'signUp',
         builder: (context, state) => const SignUpScreen(),
       ),
-      
+
       // ─────────────────────────────────────────
       // DÉTAIL SERVICE (hors ShellRoute → plein écran)
       // ─────────────────────────────────────────
@@ -63,7 +63,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ServiceDetailScreen(slug: slug);
         },
       ),
-      
+
+      // ─────────────────────────────────────────
+      // RÉSERVATION (hors shell)
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/booking',
+        name: 'booking',
+        builder: (context, state) => const BookingScreen(),
+      ),
+
+      // ─────────────────────────────────────────
+      // DÉTAIL RÉSERVATION (hors shell)
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/reservations/:id',
+        name: 'reservationDetail',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return ReservationDetailScreen(reservationId: id);
+        },
+      ),
+
       // ─────────────────────────────────────────
       // APPLICATION (avec bottom tabs)
       // ─────────────────────────────────────────
@@ -108,14 +129,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      // ─────────────────────────────────────────
-      // RÉSERVATION (hors shell)
-      // ─────────────────────────────────────────
-      GoRoute(
-        path: '/booking',
-        name: 'booking',
-        builder: (context, state) => const BookingScreen(),
-      ),
+
       // ─────────────────────────────────────────
       // ADMIN (hors bottom tabs)
       // ─────────────────────────────────────────
@@ -132,18 +146,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
-    // ─────────────────────────────────────────
-    // DÉTAIL RÉSERVATION (hors shell)
-    // ─────────────────────────────────────────
-    GoRoute(
-      path: '/reservations/:id',
-      name: 'reservationDetail',
-      builder: (context, state) {
-        final id = state.pathParameters['id']!;
-        return ReservationDetailScreen(reservationId: id);
-      },
-    ),
-    
+
     // Gestion des erreurs (route inconnue)
     errorBuilder: (context, state) => Scaffold(
       body: Center(
