@@ -15,6 +15,7 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/booking/presentation/booking_screen.dart';
+import '../../features/reservations/presentation/reservation_detail_screen.dart';
 
 /// Clés de navigation globales (pour naviguer depuis n'importe où)
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -131,6 +132,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
     ],
+    // ─────────────────────────────────────────
+    // DÉTAIL RÉSERVATION (hors shell)
+    // ─────────────────────────────────────────
+    GoRoute(
+      path: '/reservations/:id',
+      name: 'reservationDetail',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return ReservationDetailScreen(reservationId: id);
+      },
+    ),
     
     // Gestion des erreurs (route inconnue)
     errorBuilder: (context, state) => Scaffold(
