@@ -16,6 +16,8 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/booking/presentation/booking_screen.dart';
+import '../../features/invoices/presentation/invoice_list_screen.dart';
+import '../../features/invoices/presentation/devis_list_screen.dart';
 
 /// Clés de navigation globales (pour naviguer depuis n'importe où)
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -83,6 +85,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return ReservationDetailScreen(reservationId: id);
         },
+      ),
+
+      // ─────────────────────────────────────────
+      // FACTURES (hors shell)
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/invoices',
+        name: 'invoices',
+        builder: (context, state) => const InvoiceListScreen(),
+      ),
+
+      // ─────────────────────────────────────────
+      // DEVIS (hors shell)
+      // ─────────────────────────────────────────
+      GoRoute(
+        path: '/devis',
+        name: 'devis',
+        builder: (context, state) => const DevisListScreen(),
       ),
 
       // ─────────────────────────────────────────
