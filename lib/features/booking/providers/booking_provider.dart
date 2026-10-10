@@ -7,7 +7,7 @@ import '../../../providers/services_provider.dart';
 class BookingOption {
   final String id;
   final String name;
-  final String iconName; // ← nom d'icône Material (ex: 'restaurant')
+  final String iconName;
   final int unitPrice;
   final bool perPerson;
   final int quantity;
@@ -37,11 +37,11 @@ class BookingOption {
 
 /// État du parcours de réservation
 class BookingState {
-  final int currentStep; // 1 à 5
+  final int currentStep;
   final ServiceModel? selectedService;
   final DateTime? startDate;
   final DateTime? endDate;
-  final int duration; // en jours
+  final int duration;
   final int guests;
   final List<BookingOption> options;
   final String? paymentMethod;
@@ -75,11 +75,14 @@ class BookingState {
     return serviceTotal + optionsTotal;
   }
 
-  /// TVA (18% au Gabon)
-  int get tva => (subtotalHT * 0.18).round();
+  /// TPS 9,5% (Gabon - Taxe sur les Prestations de Services)
+  int get tps => (subtotalHT * 0.095).round();
+
+  /// Alias pour compatibilité avec les widgets existants
+  int get tva => tps;
 
   /// Total TTC
-  int get totalTTC => subtotalHT + tva;
+  int get totalTTC => subtotalHT + tps;
 
   /// Acompte (50%)
   int get deposit => (totalTTC * 0.5).round();
