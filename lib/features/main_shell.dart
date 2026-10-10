@@ -76,6 +76,11 @@ class _MainShellState extends ConsumerState<MainShell> {
                 activeIcon: Icon(Icons.calendar_today),
                 label: AppStrings.navReservations,
               ),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.person_outline),
+                activeIcon: Icon(Icons.person),
+                label: AppStrings.navProfile,
+              ),
             ],
           ),
         ),
