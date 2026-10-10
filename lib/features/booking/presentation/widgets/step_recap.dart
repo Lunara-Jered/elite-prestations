@@ -99,8 +99,8 @@ class StepRecap extends ConsumerWidget {
                 amount: booking.subtotalHT,
               ),
               _PriceLine(
-                label: 'TVA (18%)',
-                amount: booking.tva,
+                label: 'TPS (9,5%)',
+                amount: booking.tps,
               ),
               const Divider(height: 24),
               _PriceLine(
