@@ -81,7 +81,7 @@ class PdfService {
               pw.SizedBox(height: 4),
               pw.Text(
                 CompanyInfo.tagline,
-                style: const pw.TextStyle(
+                style:  pw.TextStyle(
                   fontSize: 9,
                   color: PdfColors.grey700,
                 ),
@@ -89,27 +89,27 @@ class PdfService {
               pw.SizedBox(height: 12),
               pw.Text(
                 CompanyInfo.address,
-                style: const pw.TextStyle(fontSize: 10),
+                style:  pw.TextStyle(fontSize: 10),
               ),
               pw.Text(
                 'NIF: ${CompanyInfo.nif}',
-                style: const pw.TextStyle(fontSize: 10),
+                style:  pw.TextStyle(fontSize: 10),
               ),
               pw.Text(
                 'RCCM: ${CompanyInfo.rccm}',
-                style: const pw.TextStyle(fontSize: 10),
+                style:  pw.TextStyle(fontSize: 10),
               ),
               pw.Text(
                 'Tél: ${CompanyInfo.phone1}',
-                style: const pw.TextStyle(fontSize: 10),
+                style:  pw.TextStyle(fontSize: 10),
               ),
               pw.Text(
                 'Tél: ${CompanyInfo.phone2}',
-                style: const pw.TextStyle(fontSize: 10),
+                style:  pw.TextStyle(fontSize: 10),
               ),
               pw.Text(
                 'Email: ${CompanyInfo.email}',
-                style: const pw.TextStyle(fontSize: 10),
+                style:  pw.TextStyle(fontSize: 10),
               ),
             ],
           ),
@@ -129,10 +129,10 @@ class PdfService {
                 color: primaryColor,
               ),
             ),
-            const pw.SizedBox(height: 8),
+            pw.SizedBox(height: 8),
             pw.Text(
               'N° ${doc.number}',
-              style: const pw.TextStyle(
+              style: pw.TextStyle(
                 fontSize: 12,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -140,13 +140,13 @@ class PdfService {
             pw.SizedBox(height: 4),
             pw.Text(
               'Date: ${_formatDate(doc.issueDate)}',
-              style: const pw.TextStyle(fontSize: 10),
+              style: pw.TextStyle(fontSize: 10),
             ),
             pw.Text(
               isDevis
                   ? 'Validité: ${_formatDate(doc.dueDate)}'
                   : 'Échéance: ${_formatDate(doc.dueDate)}',
-              style: const pw.TextStyle(fontSize: 10),
+              style: pw.TextStyle(fontSize: 10),
             ),
           ],
         ),
@@ -163,7 +163,7 @@ class PdfService {
     bool isDevis,
   ) {
     return pw.Container(
-      padding: const pw.EdgeInsets.all(12),
+      padding:  pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
         color: PdfColors.grey100,
         borderRadius: pw.BorderRadius.circular(6),
@@ -234,7 +234,7 @@ class PdfService {
         pw.SizedBox(height: 6),
         pw.Container(
           width: double.infinity,
-          padding: const pw.EdgeInsets.all(10),
+          padding:  pw.EdgeInsets.all(10),
           decoration: pw.BoxDecoration(
             color: PdfColors.grey100,
             border: pw.Border(
@@ -243,7 +243,7 @@ class PdfService {
           ),
           child: pw.Text(
             doc.subject!,
-            style: const pw.TextStyle(fontSize: 11),
+            style: pw.TextStyle(fontSize: 11),
           ),
         ),
       ],
@@ -273,10 +273,10 @@ class PdfService {
         pw.Table(
           border: pw.TableBorder.all(color: PdfColors.grey300),
           columnWidths: {
-            0: const pw.FlexColumnWidth(4),
-            1: const pw.FlexColumnWidth(1),
-            2: const pw.FlexColumnWidth(2),
-            3: const pw.FlexColumnWidth(2),
+            0: pw.FlexColumnWidth(4),
+            1: pw.FlexColumnWidth(1),
+            2: pw.FlexColumnWidth(2),
+            3: pw.FlexColumnWidth(2),
           },
           children: [
             // En-tête
