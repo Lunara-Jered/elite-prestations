@@ -174,13 +174,13 @@ class PdfService {
         children: [
           pw.Text(
             'CLIENT',
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: primaryColor,
             ),
           ),
-          const pw.SizedBox(height: 8),
+          pw.SizedBox(height: 8),
           pw.Text(
             doc.clientName,
             style: pw.TextStyle(
@@ -191,22 +191,22 @@ class PdfService {
           if (doc.clientAddress != null)
             pw.Text(
               'Adresse: ${doc.clientAddress}',
-              style: const pw.TextStyle(fontSize: 10),
+              style:  pw.TextStyle(fontSize: 10),
             ),
           if (doc.clientNif != null)
             pw.Text(
               'NIF: ${doc.clientNif}',
-              style: const pw.TextStyle(fontSize: 10),
+              style:  pw.TextStyle(fontSize: 10),
             ),
           if (doc.clientEmail != null)
             pw.Text(
               'Email: ${doc.clientEmail}',
-              style: const pw.TextStyle(fontSize: 10),
+              style:  pw.TextStyle(fontSize: 10),
             ),
           if (doc.clientPhone != null)
             pw.Text(
               'Téléphone: ${doc.clientPhone}',
-              style: const pw.TextStyle(fontSize: 10),
+              style:  pw.TextStyle(fontSize: 10),
             ),
         ],
       ),
