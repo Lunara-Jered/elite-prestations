@@ -4,8 +4,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/reservations_provider.dart';
-import '../../../shared/models/reservation_model.dart';
-import '../../../shared/widgets/status_badge.dart';
 import 'widgets/reservation_card.dart';
 
 class ReservationScreen extends ConsumerStatefulWidget {
@@ -82,9 +80,9 @@ class _ReservationList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reservations = switch (type) {
-      _ListType.active => ref.watch(activeReservationsProvider),
-      _ListType.past => ref.watch(pastReservationsProvider),
-      _ListType.cancelled => ref.watch(cancelledReservationsProvider),
+      _ListType.active => ref.watch(myActiveReservationsProvider),
+      _ListType.past => ref.watch(myPastReservationsProvider),
+      _ListType.cancelled => ref.watch(myCancelledReservationsProvider),
     };
 
     if (reservations.isEmpty) {

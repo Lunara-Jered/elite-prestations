@@ -129,7 +129,7 @@ class PdfService {
                 color: primaryColor,
               ),
             ),
-            pw.SizedBox(height: 8),
+            const pw.SizedBox(height: 8),
             pw.Text(
               'N° ${doc.number}',
               style: const pw.TextStyle(
@@ -174,13 +174,13 @@ class PdfService {
         children: [
           pw.Text(
             'CLIENT',
-            style: pw.TextStyle(
+            style: const pw.TextStyle(
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: primaryColor,
             ),
           ),
-          pw.SizedBox(height: 8),
+          const pw.SizedBox(height: 8),
           pw.Text(
             doc.clientName,
             style: pw.TextStyle(
@@ -497,7 +497,7 @@ class PdfService {
             : right
                 ? pw.TextAlign.right
                 : pw.TextAlign.left,
-        style: pw.TextStyle(
+        style: const pw.TextStyle(
           color: PdfColors.white,
           fontWeight: pw.FontWeight.bold,
           fontSize: 10,

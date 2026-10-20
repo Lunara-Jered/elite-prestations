@@ -17,13 +17,22 @@ class ReservationDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reservations = ref.watch(reservationsProvider);
-    final reservation = reservations.firstWhere(
-      (r) => r.id == reservationId,
-      orElse: () => reservations.first,
-    );
-    final isLight = Theme.of(context).brightness == Brightness.light;
-
+    final reservations = ref.watch(myReservationsProvider);
+    final matchingReservations =
+        reservations.where((reservation) => reservation.id == reservationId);
+    if (matchingReservations.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.go('/reservations'),
+          ),
+          title: const Text('Détail réservation'),
+        ),
+        body: const Center(child: Text('Réservation introuvable.')),
+      );
+    }
+    final reservation = matchingReservations.first;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(

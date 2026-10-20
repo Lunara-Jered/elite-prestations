@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency.dart';
@@ -15,10 +16,8 @@ class DashboardScreen extends ConsumerWidget {
     final reservations = ref.watch(activeReservationsProvider);
     final invoices = ref.watch(invoicesProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Tableau de bord')),
-      body: SafeArea(
-        child: ListView(
+    return SafeArea(
+      child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             // ─────────────────────────────────
@@ -79,7 +78,7 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 12),
 
             if (reservations.isEmpty)
-              _EmptyCard(text: 'Aucune réservation active')
+              const _EmptyCard(text: 'Aucune réservation active')
             else
               ...reservations.take(3).map(
                     (r) => Container(
@@ -136,7 +135,7 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 12),
 
             if (invoices.isEmpty)
-              _EmptyCard(text: 'Aucune facture')
+              const _EmptyCard(text: 'Aucune facture')
             else
               ...invoices.take(3).map(
                     (inv) => Container(
@@ -198,7 +197,7 @@ class DashboardScreen extends ConsumerWidget {
                   child: _QuickAction(
                     icon: Icons.receipt_long,
                     label: 'Factures',
-                    onTap: () {},
+                    onTap: () => context.go('/invoices'),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -206,13 +205,12 @@ class DashboardScreen extends ConsumerWidget {
                   child: _QuickAction(
                     icon: Icons.description_outlined,
                     label: 'Devis',
-                    onTap: () {},
+                    onTap: () => context.go('/devis'),
                   ),
                 ),
               ],
             ),
           ],
-        ),
       ),
     );
   }
@@ -236,8 +234,6 @@ class _KpiCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLight = Theme.of(context).brightness == Brightness.light;
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -264,7 +260,7 @@ class _KpiCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.gray300,
               fontSize: 11,
             ),

@@ -11,7 +11,6 @@ import '../../features/reservations/presentation/reservation_detail_screen.dart'
 import '../../features/messages/presentation/messages_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/admin/presentation/admin_shell.dart';
-import '../../features/admin/presentation/dashboard_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/sign_in_screen.dart';
 import '../../features/auth/presentation/sign_up_screen.dart';
@@ -161,7 +160,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: 'dashboard',
             name: 'adminDashboard',
-            builder: (context, state) => const DashboardScreen(),
+            redirect: (context, state) => '/admin',
           ),
         ],
       ),

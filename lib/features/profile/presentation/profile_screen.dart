@@ -1,15 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
+import '../../../core/services/local_storage_service.dart';
+import '../../../providers/auth_provider.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends ConsumerState<ProfileScreen> {
+  bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final settings =
+        ref.read(localStorageServiceProvider).readObject('profile_settings');
+    _notificationsEnabled =
+        settings?['notificationsEnabled'] as bool? ?? true;
+  }
+
+  Future<void> _setNotificationsEnabled(bool enabled) async {
+    final previousValue = _notificationsEnabled;
+    setState(() => _notificationsEnabled = enabled);
+    try {
+      await ref.read(localStorageServiceProvider).saveObject(
+        'profile_settings',
+        {'notificationsEnabled': enabled},
+      );
+    } catch (error) {
+      if (mounted) {
+        setState(() => _notificationsEnabled = previousValue);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Impossible d’enregistrer ce réglage : $error')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
+    final user = ref.watch(authProvider).user;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mon profil')),
@@ -42,9 +79,9 @@ class ProfileScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Invité',
-                    style: TextStyle(
+                  Text(
+                    user?.name ?? 'Invité',
+                    style: const TextStyle(
                       color: AppColors.white,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -52,26 +89,42 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Connectez-vous pour profiter de toutes les fonctionnalités',
+                    user?.email ??
+                        'Connectez-vous pour profiter de toutes les fonctionnalités',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.gray300,
                       fontSize: 12,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () => context.go('/sign-in'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.white,
-                        foregroundColor: AppColors.primary,
-                        minimumSize: const Size(0, 44),
+                  if (user == null)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => context.go('/sign-in'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.white,
+                          foregroundColor: AppColors.primary,
+                          minimumSize: const Size(0, 44),
+                        ),
+                        child: const Text('Se connecter'),
                       ),
-                      child: const Text('Se connecter'),
+                    )
+                  else if (user.isAdmin)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => context.go('/admin'),
+                        icon: const Icon(Icons.dashboard_outlined),
+                        label: const Text('Espace administration'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.white,
+                          foregroundColor: AppColors.primary,
+                          minimumSize: const Size(0, 44),
+                        ),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -80,7 +133,7 @@ class ProfileScreen extends StatelessWidget {
             // ─────────────────────────────────
             // MON COMPTE
             // ─────────────────────────────────
-            _SectionTitle(title: 'Mon compte'),
+            const _SectionTitle(title: 'Mon compte'),
             const SizedBox(height: 8),
             _MenuGroup(
               items: [
@@ -111,7 +164,7 @@ class ProfileScreen extends StatelessWidget {
             // ─────────────────────────────────
             // PRÉFÉRENCES
             // ─────────────────────────────────
-            _SectionTitle(title: 'Préférences'),
+            const _SectionTitle(title: 'Préférences'),
             const SizedBox(height: 8),
             _MenuGroup(
               items: [
@@ -119,24 +172,12 @@ class ProfileScreen extends StatelessWidget {
                   icon: Icons.notifications_outlined,
                   title: 'Notifications',
                   trailing: Switch(
-                    value: true,
-                    onChanged: (v) {},
+                    value: _notificationsEnabled,
+                    onChanged: _setNotificationsEnabled,
                     activeThumbColor: isLight
                         ? AppColors.primary
                         : AppColors.white,
                   ),
-                ),
-                _MenuItem(
-                  icon: Icons.language_outlined,
-                  title: 'Langue',
-                  trailing: const Text(
-                    'Français',
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 13,
-                    ),
-                  ),
-                  onTap: () {},
                 ),
               ],
             ),
@@ -145,14 +186,19 @@ class ProfileScreen extends StatelessWidget {
             // ─────────────────────────────────
             // AIDE
             // ─────────────────────────────────
-            _SectionTitle(title: 'Aide & informations'),
+            const _SectionTitle(title: 'Aide & informations'),
             const SizedBox(height: 8),
             _MenuGroup(
               items: [
                 _MenuItem(
                   icon: Icons.help_outline,
                   title: 'FAQ',
-                  onTap: () {},
+                  onTap: () => _showInfoDialog(
+                    context,
+                    'Questions fréquentes',
+                    'Pour une réservation, choisissez une prestation et suivez les étapes du formulaire. '
+                        'Pour toute autre demande, écrivez-nous dans la messagerie.',
+                  ),
                 ),
                 _MenuItem(
                   icon: Icons.chat_bubble_outline,
@@ -171,7 +217,11 @@ class ProfileScreen extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
-                  onTap: () {},
+                  onTap: () => _showInfoDialog(
+                    context,
+                    'Élite Prestations',
+                    'Prestations multiservices et location de matériels à Libreville, Gabon.',
+                  ),
                 ),
               ],
             ),
@@ -181,9 +231,24 @@ class ProfileScreen extends StatelessWidget {
             // DÉCONNEXION
             // ─────────────────────────────────
             OutlinedButton.icon(
-              onPressed: () {},
+              onPressed: user == null
+                  ? () => context.go('/sign-in')
+                  : () async {
+                      try {
+                        await ref.read(authProvider.notifier).signOut();
+                        if (context.mounted) context.go('/sign-in');
+                      } catch (error) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Impossible de se déconnecter : $error'),
+                            ),
+                          );
+                        }
+                      }
+                    },
               icon: const Icon(Icons.logout, size: 18),
-              label: const Text('Se déconnecter'),
+              label: Text(user == null ? 'Se connecter' : 'Se déconnecter'),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.error,
                 side: const BorderSide(color: AppColors.error),
@@ -193,7 +258,7 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
 
             // Version
-            Center(
+            const Center(
               child: Text(
                 'ÉLITE PRESTATIONS • Le Meilleur Pour Vous',
                 style: TextStyle(
@@ -204,6 +269,22 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showInfoDialog(BuildContext context, String title, String message) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Fermer'),
+          ),
+        ],
       ),
     );
   }

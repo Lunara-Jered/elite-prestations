@@ -1,91 +1,116 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../features/booking/providers/booking_provider.dart';
+import '../core/services/local_storage_service.dart';
 import '../shared/models/reservation_model.dart';
+import 'auth_provider.dart';
 
-/// Provider des réservations (mockées pour l'instant)
-final reservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final now = DateTime.now();
+const _reservationsStorageKey = 'reservations';
 
-  return [
-    ReservationModel(
-      id: 'res-001',
-      reference: 'RES-2026-0042',
-      serviceName: 'Location de Salle Événementielle',
-      startDate: now.add(const Duration(days: 7)),
-      endDate: now.add(const Duration(days: 9)),
-      duration: 3,
-      totalTTC: 885000, // 750 000 HT + 135 000 TVA
-      deposit: 442500,
-      status: ReservationStatus.confirmed,
-      options: const [
-        BookingOption(
-          id: 'traiteur',
-          name: 'Service Traiteur',
-          iconName: 'restaurant',
-          unitPrice: 15000,
-          perPerson: true,
-          quantity: 0,
-        ),
-      ],
-      createdAt: now.subtract(const Duration(days: 3)),
-    ),
-    ReservationModel(
-      id: 'res-002',
-      reference: 'RES-2026-0039',
-      serviceName: 'Organisation de Mariages',
-      startDate: now.add(const Duration(days: 60)),
-      endDate: now.add(const Duration(days: 60)),
-      duration: 1,
-      totalTTC: 1770000, // 1 500 000 HT + 270 000 TVA
-      deposit: 885000,
-      status: ReservationStatus.pending,
-      createdAt: now.subtract(const Duration(days: 1)),
-    ),
-    ReservationModel(
-      id: 'res-003',
-      reference: 'RES-2026-0031',
-      serviceName: 'Appartement Meublé',
-      startDate: now.subtract(const Duration(days: 30)),
-      endDate: now.subtract(const Duration(days: 28)),
-      duration: 3,
-      totalTTC: 123900, // 105 000 HT + 18 900 TVA
-      deposit: 61950,
-      status: ReservationStatus.completed,
-      createdAt: now.subtract(const Duration(days: 45)),
-    ),
-    ReservationModel(
-      id: 'res-004',
-      reference: 'RES-2026-0025',
-      serviceName: 'Service de Nettoyage',
-      startDate: now.subtract(const Duration(days: 15)),
-      endDate: now.subtract(const Duration(days: 15)),
-      duration: 1,
-      totalTTC: 59000, // 50 000 HT + 9 000 TVA
-      deposit: 29500,
-      status: ReservationStatus.cancelled,
-      createdAt: now.subtract(const Duration(days: 20)),
-    ),
-  ];
-});
+final reservationsProvider =
+    NotifierProvider<ReservationsNotifier, List<ReservationModel>>(
+  ReservationsNotifier.new,
+);
 
-/// Réservations en cours (pending + confirmed + inProgress)
+class ReservationsNotifier extends Notifier<List<ReservationModel>> {
+  late LocalStorageService _storage;
+
+  @override
+  List<ReservationModel> build() {
+    _storage = ref.read(localStorageServiceProvider);
+    return List.unmodifiable(
+      _storage.readList(_reservationsStorageKey, ReservationModel.fromJson),
+    );
+  }
+
+  Future<void> addReservation(ReservationModel reservation) async {
+    if (state.any((item) => item.id == reservation.id)) {
+      throw StateError('Une réservation avec cet identifiant existe déjà.');
+    }
+    await _save([...state, reservation]);
+  }
+
+  Future<void> updateStatus(String id, ReservationStatus status) async {
+    final index = state.indexWhere((reservation) => reservation.id == id);
+    if (index < 0) throw StateError('Réservation introuvable.');
+    final updated = [...state];
+    updated[index] = updated[index].copyWith(status: status);
+    await _save(updated);
+  }
+
+  Future<void> updateReservation(ReservationModel reservation) async {
+    final index = state.indexWhere((item) => item.id == reservation.id);
+    if (index < 0) throw StateError('Réservation introuvable.');
+    final updated = [...state];
+    updated[index] = reservation;
+    await _save(updated);
+  }
+
+  Future<void> removeReservation(String id) async {
+    if (!state.any((reservation) => reservation.id == id)) return;
+    await _save(
+      state.where((reservation) => reservation.id != id).toList(),
+    );
+  }
+
+  Future<void> _save(List<ReservationModel> reservations) async {
+    await _storage.saveList(
+      _reservationsStorageKey,
+      reservations,
+      (reservation) => reservation.toJson(),
+    );
+    state = List.unmodifiable(reservations);
+  }
+}
+
 final activeReservationsProvider = Provider<List<ReservationModel>>((ref) {
   final all = ref.watch(reservationsProvider);
-  return all.where((r) =>
-      r.status == ReservationStatus.pending ||
-      r.status == ReservationStatus.confirmed ||
-      r.status == ReservationStatus.inProgress).toList();
+  return all
+      .where((reservation) =>
+          reservation.status == ReservationStatus.pending ||
+          reservation.status == ReservationStatus.confirmed ||
+          reservation.status == ReservationStatus.inProgress)
+      .toList();
 });
 
-/// Réservations passées (completed)
+final myReservationsProvider = Provider<List<ReservationModel>>((ref) {
+  final email = ref.watch(authProvider.select((state) => state.user?.email));
+  return ref
+      .watch(reservationsProvider)
+      .where((reservation) => reservation.clientEmail == email)
+      .toList();
+});
+
+final myActiveReservationsProvider = Provider<List<ReservationModel>>((ref) {
+  return ref.watch(myReservationsProvider).where((reservation) =>
+      reservation.status == ReservationStatus.pending ||
+      reservation.status == ReservationStatus.confirmed ||
+      reservation.status == ReservationStatus.inProgress).toList();
+});
+
+final myPastReservationsProvider = Provider<List<ReservationModel>>((ref) {
+  return ref
+      .watch(myReservationsProvider)
+      .where((reservation) => reservation.status == ReservationStatus.completed)
+      .toList();
+});
+
+final myCancelledReservationsProvider = Provider<List<ReservationModel>>((ref) {
+  return ref
+      .watch(myReservationsProvider)
+      .where((reservation) => reservation.status == ReservationStatus.cancelled)
+      .toList();
+});
+
 final pastReservationsProvider = Provider<List<ReservationModel>>((ref) {
   final all = ref.watch(reservationsProvider);
-  return all.where((r) => r.status == ReservationStatus.completed).toList();
+  return all
+      .where((reservation) => reservation.status == ReservationStatus.completed)
+      .toList();
 });
 
-/// Réservations annulées (cancelled)
 final cancelledReservationsProvider = Provider<List<ReservationModel>>((ref) {
   final all = ref.watch(reservationsProvider);
-  return all.where((r) => r.status == ReservationStatus.cancelled).toList();
+  return all
+      .where((reservation) => reservation.status == ReservationStatus.cancelled)
+      .toList();
 });

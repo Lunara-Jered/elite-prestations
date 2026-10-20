@@ -56,7 +56,7 @@ class ServiceDetailScreen extends ConsumerWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Center(
+                    const Center(
                       child: Icon(
                         Icons.image_outlined,
                         size: 64,
@@ -109,7 +109,7 @@ class ServiceDetailScreen extends ConsumerWidget {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(width: 12),
-                      Text(
+                      const Text(
                         '•',
                         style: TextStyle(color: AppColors.textMuted),
                       ),

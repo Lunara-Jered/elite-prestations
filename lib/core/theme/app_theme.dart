@@ -89,7 +89,7 @@ class AppTheme {
           foregroundColor: isLight ? AppColors.white : AppColors.primary,
           elevation: 0,
           minimumSize: const Size(double.infinity, 56),
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: AppRadius.buttonRadius,
           ),
           textStyle: GoogleFonts.inter(
@@ -112,7 +112,7 @@ class AppTheme {
             color: isLight ? AppColors.primary : AppColors.white,
             width: 1.5,
           ),
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: AppRadius.buttonRadius,
           ),
           textStyle: GoogleFonts.inter(
@@ -212,7 +212,7 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.primary,
         contentTextStyle: GoogleFonts.inter(color: AppColors.textOnDark),
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: AppRadius.buttonRadius,
         ),
       ),

@@ -1,4 +1,3 @@
-// TODO: Implement the booking options step.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -10,7 +9,7 @@ import '../../providers/booking_provider.dart';
 class StepOptions extends ConsumerWidget {
   const StepOptions({super.key});
 
-  /// Options disponibles (à terme, viendront de Supabase)
+  /// Options proposées pour une réservation.
   static const List<BookingOption> _availableOptions = [
     BookingOption(
       id: 'traiteur',

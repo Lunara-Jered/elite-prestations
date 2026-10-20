@@ -19,7 +19,6 @@ class ReservationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
-    final dateFmt = DateFormat('dd MMM yyyy', 'fr_FR');
 
     return GestureDetector(
       onTap: onTap,

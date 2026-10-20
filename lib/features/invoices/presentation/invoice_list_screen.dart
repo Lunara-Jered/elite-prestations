@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency.dart';
+import '../../../providers/auth_provider.dart';
 import '../../../providers/invoices_provider.dart';
 import '../../../shared/models/invoice_model.dart';
 import 'invoice_preview_screen.dart';
@@ -13,7 +14,11 @@ class InvoiceListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final invoices = ref.watch(invoicesProvider);
+    final userEmail = ref.watch(authProvider.select((state) => state.user?.email));
+    final invoices = ref
+        .watch(invoicesProvider)
+        .where((invoice) => invoice.clientEmail == userEmail)
+        .toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mes factures')),
@@ -151,7 +156,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.receipt_long_outlined,
             size: 64,
             color: AppColors.textMuted,

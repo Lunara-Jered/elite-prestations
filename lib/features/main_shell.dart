@@ -27,6 +27,9 @@ class _MainShellState extends ConsumerState<MainShell> {
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
+    final location = GoRouterState.of(context).uri.path;
+    final routeIndex = _routes.indexOf(location);
+    final currentIndex = routeIndex < 0 ? _currentIndex : routeIndex;
 
     return Scaffold(
       body: widget.child,
@@ -42,7 +45,7 @@ class _MainShellState extends ConsumerState<MainShell> {
         child: SafeArea(
           top: false,
           child: BottomNavigationBar(
-            currentIndex: _currentIndex,
+            currentIndex: currentIndex,
             onTap: (index) {
               setState(() => _currentIndex = index);
               context.go(_routes[index]);

@@ -1,9 +1,14 @@
-// TODO: Implement the booking flow.
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/company_info.dart';
+import '../../../providers/auth_provider.dart';
+import '../../../providers/invoices_provider.dart';
+import '../../../providers/reservations_provider.dart';
+import '../../../shared/models/invoice_model.dart';
+import '../../../shared/models/reservation_model.dart';
 import '../providers/booking_provider.dart';
 import 'widgets/booking_stepper_header.dart';
 import 'widgets/step_service.dart';
@@ -92,12 +97,20 @@ class BookingScreen extends ConsumerWidget {
 // ─────────────────────────────────────────
 // BARRE INFÉRIEURE (bouton Continuer)
 // ─────────────────────────────────────────
-class _BottomBar extends ConsumerWidget {
+class _BottomBar extends ConsumerStatefulWidget {
   final BookingState booking;
   const _BottomBar({required this.booking});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_BottomBar> createState() => _BottomBarState();
+}
+
+class _BottomBarState extends ConsumerState<_BottomBar> {
+  bool _isSubmitting = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final booking = widget.booking;
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Container(
@@ -115,20 +128,22 @@ class _BottomBar extends ConsumerWidget {
         child: SizedBox(
           width: double.infinity,
           child: ElevatedButton(
-            onPressed: booking.isCurrentStepValid
+            onPressed: booking.isCurrentStepValid && !_isSubmitting
                 ? () {
                     if (booking.currentStep < 5) {
                       ref.read(bookingProvider.notifier).nextStep();
                     } else {
                       // Confirmation finale
-                      _confirmBooking(context, ref);
+                      _confirmBooking(context);
                     }
                   }
                 : null,
             child: Text(
               booking.currentStep < 5
                   ? 'Continuer'
-                  : 'Confirmer le paiement',
+                  : _isSubmitting
+                      ? 'Enregistrement...'
+                      : 'Confirmer le paiement',
             ),
           ),
         ),
@@ -136,27 +151,134 @@ class _BottomBar extends ConsumerWidget {
     );
   }
 
-  void _confirmBooking(BuildContext context, WidgetRef ref) {
-    // TODO: appel Supabase + génération facture
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Réservation confirmée !'),
-        content: const Text(
-          'Vous recevrez une confirmation par email et WhatsApp.\n'
-          'Votre facture sera disponible dans "Mes réservations".',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(bookingProvider.notifier).reset();
-              context.go('/reservations');
-            },
-            child: const Text('Voir ma réservation'),
-          ),
-        ],
+  Future<void> _confirmBooking(BuildContext context) async {
+    if (_isSubmitting) return;
+    final service = widget.booking.selectedService;
+    final startDate = widget.booking.startDate;
+    if (service == null || startDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Les informations de réservation sont incomplètes.')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final now = DateTime.now();
+    final id = now.microsecondsSinceEpoch.toString();
+    final currentUser = ref.read(authProvider).user;
+    final clientName = currentUser?.name ?? 'Client invité';
+    final endDate = widget.booking.endDate ??
+        startDate.add(Duration(days: widget.booking.duration - 1));
+    final serviceQuantity =
+        service.unit == 'jour' || service.unit == 'nuit'
+            ? widget.booking.duration
+            : 1;
+    final lines = <InvoiceLine>[
+      InvoiceLine.create(
+        description: service.name,
+        quantity: serviceQuantity.toDouble(),
+        unitPrice: service.basePrice,
+        tpsRate: CompanyInfo.tpsRate,
       ),
+      ...widget.booking.options.where((option) => option.quantity > 0).map(
+            (option) => InvoiceLine.create(
+              description: option.name,
+              quantity: option.quantity.toDouble(),
+              unitPrice: option.unitPrice,
+              tpsRate: CompanyInfo.tpsRate,
+            ),
+          ),
+    ];
+    final reservation = ReservationModel(
+      id: id,
+      reference:
+          'RES-${now.year}-${id.substring(id.length - 6).padLeft(6, '0')}',
+      serviceName: service.name,
+      startDate: startDate,
+      endDate: endDate,
+      duration: widget.booking.duration,
+      totalTTC: widget.booking.totalTTC,
+      deposit: widget.booking.deposit,
+      status: ReservationStatus.pending,
+      options: widget.booking.options,
+      createdAt: now,
+      clientId: currentUser?.id,
+      clientName: clientName,
+      clientEmail: currentUser?.email,
     );
+    final invoice = InvoiceModel(
+      id: 'INV-$id',
+      number:
+          'FACT-${now.year}${now.month.toString().padLeft(2, '0')}-${id.substring(id.length - 6)}',
+      type: DocumentType.facture,
+      clientName: clientName,
+      clientEmail: currentUser?.email,
+      clientPhone: currentUser?.phone,
+      issueDate: now,
+      dueDate: now.add(const Duration(days: 30)),
+      lines: lines,
+      subtotalHT: widget.booking.subtotalHT,
+      tps: widget.booking.tps,
+      totalTTC: widget.booking.totalTTC,
+      invoiceStatus: widget.booking.deposit >= widget.booking.totalTTC
+          ? InvoiceStatus.paid
+          : InvoiceStatus.partial,
+      notes: 'Acompte : ${widget.booking.deposit} FCFA',
+      createdAt: now,
+    );
+
+    var reservationSaved = false;
+    var invoiceSaved = false;
+    try {
+      await ref.read(reservationsProvider.notifier).addReservation(reservation);
+      reservationSaved = true;
+      await ref.read(invoicesProvider.notifier).addInvoice(invoice);
+      invoiceSaved = true;
+      ref.read(bookingProvider.notifier).reset();
+      if (!context.mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) => AlertDialog(
+          icon: const Icon(Icons.check_circle_outline),
+          title: const Text('Réservation enregistrée'),
+          content: Text(
+            'Votre réservation ${reservation.reference} est enregistrée. '
+            'La facture ${invoice.number} est disponible dans votre espace.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Voir mes réservations'),
+            ),
+          ],
+        ),
+      );
+      if (context.mounted) context.go('/reservations');
+    } catch (error) {
+      Object reportedError = error;
+      if (reservationSaved && !invoiceSaved) {
+        try {
+          await ref
+              .read(reservationsProvider.notifier)
+              .removeReservation(reservation.id);
+        } catch (cleanupError) {
+          reportedError = StateError(
+            '$error. Le nettoyage de la réservation a également échoué : $cleanupError',
+          );
+        }
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Impossible de confirmer la réservation : $reportedError',
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 }

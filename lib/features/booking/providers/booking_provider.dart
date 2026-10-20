@@ -1,4 +1,3 @@
-// TODO: Implement booking state and actions.
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/services_provider.dart';
@@ -33,6 +32,24 @@ class BookingOption {
       quantity: quantity ?? this.quantity,
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'iconName': iconName,
+        'unitPrice': unitPrice,
+        'perPerson': perPerson,
+        'quantity': quantity,
+      };
+
+  factory BookingOption.fromJson(Map<String, dynamic> json) => BookingOption(
+        id: json['id'] as String,
+        name: json['name'] as String,
+        iconName: json['iconName'] as String,
+        unitPrice: (json['unitPrice'] as num).toInt(),
+        perPerson: json['perPerson'] as bool? ?? false,
+        quantity: (json['quantity'] as num?)?.toInt() ?? 0,
+      );
 }
 
 /// État du parcours de réservation
@@ -165,7 +182,11 @@ class BookingNotifier extends Notifier<BookingState> {
   }
 
   void setDuration(int days) {
-    state = state.copyWith(duration: days);
+    final duration = days > 0 ? days : 1;
+    final endDate = state.startDate == null
+        ? state.endDate
+        : state.startDate!.add(Duration(days: duration - 1));
+    state = state.copyWith(duration: duration, endDate: endDate);
   }
 
   void setGuests(int guests) {

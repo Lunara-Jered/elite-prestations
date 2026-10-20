@@ -1,4 +1,3 @@
-// TODO: Define the invoice model.
 /// Modèle d'une ligne de facture/devis
 class InvoiceLine {
   final String description;
@@ -16,6 +15,24 @@ class InvoiceLine {
     required this.tps,
     required this.totalTTC,
   });
+
+  Map<String, dynamic> toJson() => {
+        'description': description,
+        'quantity': quantity,
+        'unitPrice': unitPrice,
+        'totalHT': totalHT,
+        'tps': tps,
+        'totalTTC': totalTTC,
+      };
+
+  factory InvoiceLine.fromJson(Map<String, dynamic> json) => InvoiceLine(
+        description: json['description'] as String,
+        quantity: (json['quantity'] as num).toDouble(),
+        unitPrice: (json['unitPrice'] as num).toInt(),
+        totalHT: (json['totalHT'] as num).toInt(),
+        tps: (json['tps'] as num).toInt(),
+        totalTTC: (json['totalTTC'] as num).toInt(),
+      );
 
   factory InvoiceLine.create({
     required String description,
@@ -103,6 +120,84 @@ class InvoiceModel {
     this.devisStatus = DevisStatus.pending,
     required this.createdAt,
   });
+
+  InvoiceModel copyWith({
+    InvoiceStatus? invoiceStatus,
+    DevisStatus? devisStatus,
+  }) =>
+      InvoiceModel(
+        id: id,
+        number: number,
+        type: type,
+        clientName: clientName,
+        clientAddress: clientAddress,
+        clientNif: clientNif,
+        clientEmail: clientEmail,
+        clientPhone: clientPhone,
+        issueDate: issueDate,
+        dueDate: dueDate,
+        lines: lines,
+        subtotalHT: subtotalHT,
+        tps: tps,
+        totalTTC: totalTTC,
+        notes: notes,
+        conditions: conditions,
+        subject: subject,
+        invoiceStatus: invoiceStatus ?? this.invoiceStatus,
+        devisStatus: devisStatus ?? this.devisStatus,
+        createdAt: createdAt,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'number': number,
+        'type': type.name,
+        'clientName': clientName,
+        'clientAddress': clientAddress,
+        'clientNif': clientNif,
+        'clientEmail': clientEmail,
+        'clientPhone': clientPhone,
+        'issueDate': issueDate.toIso8601String(),
+        'dueDate': dueDate.toIso8601String(),
+        'lines': lines.map((line) => line.toJson()).toList(),
+        'subtotalHT': subtotalHT,
+        'tps': tps,
+        'totalTTC': totalTTC,
+        'notes': notes,
+        'conditions': conditions,
+        'subject': subject,
+        'invoiceStatus': invoiceStatus.name,
+        'devisStatus': devisStatus.name,
+        'createdAt': createdAt.toIso8601String(),
+      };
+
+  factory InvoiceModel.fromJson(Map<String, dynamic> json) => InvoiceModel(
+        id: json['id'] as String,
+        number: json['number'] as String,
+        type: DocumentType.values.byName(json['type'] as String),
+        clientName: json['clientName'] as String,
+        clientAddress: json['clientAddress'] as String?,
+        clientNif: json['clientNif'] as String?,
+        clientEmail: json['clientEmail'] as String?,
+        clientPhone: json['clientPhone'] as String?,
+        issueDate: DateTime.parse(json['issueDate'] as String),
+        dueDate: DateTime.parse(json['dueDate'] as String),
+        lines: (json['lines'] as List<dynamic>)
+            .map((line) =>
+                InvoiceLine.fromJson(Map<String, dynamic>.from(line as Map)))
+            .toList(),
+        subtotalHT: (json['subtotalHT'] as num).toInt(),
+        tps: (json['tps'] as num).toInt(),
+        totalTTC: (json['totalTTC'] as num).toInt(),
+        notes: json['notes'] as String?,
+        conditions: json['conditions'] as String?,
+        subject: json['subject'] as String?,
+        invoiceStatus: InvoiceStatus.values
+            .byName(json['invoiceStatus'] as String? ?? 'unpaid'),
+        devisStatus: DevisStatus.values
+            .byName(json['devisStatus'] as String? ?? 'pending'),
+        createdAt: DateTime.parse(json['createdAt'] as String),
+      );
 
   /// Vérifie si le devis est expiré
   bool get isDevisExpired =>

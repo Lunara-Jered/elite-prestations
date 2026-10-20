@@ -234,10 +234,10 @@ class _HeroCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
+                const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'ÉLITE PRESTATIONS',
                       style: TextStyle(
                         color: AppColors.white,
@@ -246,7 +246,7 @@ class _HeroCard extends StatelessWidget {
                         letterSpacing: 3,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    SizedBox(height: 4),
                     Text(
                       'Le Meilleur Pour Vous',
                       style: TextStyle(

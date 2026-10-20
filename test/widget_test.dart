@@ -1,15 +1,22 @@
 import 'package:elite_prestations/app.dart';
-import 'package:flutter/material.dart';
+import 'package:elite_prestations/core/services/local_storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   testWidgets('L\'app Élite Prestations démarre correctement',
       (WidgetTester tester) async {
-    // Lancer l'app avec le ProviderScope obligatoire pour Riverpod
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
     await tester.pumpWidget(
-      const ProviderScope(
-        child: ElitePrestationsApp(),
+      ProviderScope(
+        overrides: [
+          localStorageServiceProvider.overrideWithValue(
+            LocalStorageService(preferences),
+          ),
+        ],
+        child: const ElitePrestationsApp(),
       ),
     );
 

@@ -1,1 +1,1 @@
-// TODO: Implement authentication state and actions.
+export '../../../providers/auth_provider.dart';
