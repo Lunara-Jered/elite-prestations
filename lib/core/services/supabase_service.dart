@@ -3,8 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SupabaseConfig {
   SupabaseConfig._();
 
-  static const url = String.fromEnvironment('https://yhxdvbguztnirevcwnlz.supabase.co');
-  static const anonKey = String.fromEnvironment('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR2Ymd1enRuaXJldmN3bmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NTcwOTAsImV4cCI6MjEwODMzMzA5MH0.sYhIWKv-sA9emehx7ADh72auKV5nGsFrgEJBxkFbAfQ');
+  // On met les valeurs directement entre guillemets
+  static const String url = 'https://yhxdvbguztnirevcwnlz.supabase.co';
+  static const String anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR2Ymd1enRuaXJ2Y3dubHoiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc5Mjc1NzA5MCwiZXhwIjoyMTA4MzMzMDkwfQ.sYhIWKv-sA9emehx7ADh72auKV5nGsFrgEJBxkFbAfQ';
 
   static Object? initializationError;
 
@@ -15,10 +16,10 @@ class SupabaseService {
   SupabaseService._();
 
   static SupabaseClient get client {
-    final initializationError = SupabaseConfig.initializationError;
-    if (initializationError != null) {
+    final error = SupabaseConfig.initializationError;
+    if (error != null) {
       throw StateError(
-        'L’initialisation de Supabase a échoué : $initializationError',
+        'L’initialisation de Supabase a échoué : $error',
       );
     }
     if (!SupabaseConfig.isConfigured) {
