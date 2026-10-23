@@ -1,105 +1,86 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/services/local_storage_service.dart';
+import '../core/services/supabase_service.dart';
 import '../shared/models/invoice_model.dart';
-
-const _invoicesStorageKey = 'invoices';
-const _devisStorageKey = 'devis';
+import 'devis_provider.dart';
 
 final invoicesProvider =
-    NotifierProvider<InvoicesNotifier, List<InvoiceModel>>(
+    AsyncNotifierProvider<InvoicesNotifier, List<InvoiceModel>>(
   InvoicesNotifier.new,
 );
 
-class InvoicesNotifier extends Notifier<List<InvoiceModel>> {
-  late LocalStorageService _storage;
-
+class InvoicesNotifier extends AsyncNotifier<List<InvoiceModel>> {
   @override
-  List<InvoiceModel> build() {
-    _storage = ref.read(localStorageServiceProvider);
-    return List.unmodifiable(
-      _storage.readList(_invoicesStorageKey, InvoiceModel.fromJson),
-    );
+  Future<List<InvoiceModel>> build() async {
+    final data = await SupabaseService.client
+        .from('invoices')
+        .select()
+        .order('created_at', ascending: false);
+    return data
+        .map((json) => InvoiceModel.fromJson(Map<String, dynamic>.from(json)))
+        .toList();
   }
 
   Future<void> addInvoice(InvoiceModel invoice) async {
     if (invoice.type != DocumentType.facture) {
       throw ArgumentError('Le document ajouté doit être une facture.');
     }
-    if (state.any((item) => item.id == invoice.id)) {
+    if ((state.value ?? const []).any((item) => item.id == invoice.id)) {
       throw StateError('Une facture avec cet identifiant existe déjà.');
     }
-    await _save([...state, invoice]);
+    try {
+      final row = await SupabaseService.client
+          .from('invoices')
+          .insert(invoice.toSupabaseJson(
+            userId: SupabaseService.client.auth.currentUser?.id,
+          ))
+          .select()
+          .single();
+      final created =
+          InvoiceModel.fromJson(Map<String, dynamic>.from(row));
+      state = AsyncData([...state.value ?? const [], created]);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> updateStatus(String id, InvoiceStatus status) async {
-    final index = state.indexWhere((invoice) => invoice.id == id);
+    final invoices = state.value ?? const [];
+    final index = invoices.indexWhere((invoice) => invoice.id == id);
     if (index < 0) throw StateError('Facture introuvable.');
-    final updated = [...state];
-    updated[index] = updated[index].copyWith(invoiceStatus: status);
-    await _save(updated);
+    try {
+      await SupabaseService.client
+          .from('invoices')
+          .update({'invoice_status': status.name})
+          .eq('id', id);
+      final updated = [...invoices];
+      updated[index] = updated[index].copyWith(invoiceStatus: status);
+      state = AsyncData(updated);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> removeInvoice(String id) async {
-    if (!state.any((invoice) => invoice.id == id)) return;
-    await _save(state.where((invoice) => invoice.id != id).toList());
-  }
-
-  Future<void> _save(List<InvoiceModel> invoices) async {
-    await _storage.saveList(
-      _invoicesStorageKey,
-      invoices,
-      (invoice) => invoice.toJson(),
-    );
-    state = List.unmodifiable(invoices);
-  }
-}
-
-final devisProvider = NotifierProvider<DevisNotifier, List<InvoiceModel>>(
-  DevisNotifier.new,
-);
-
-class DevisNotifier extends Notifier<List<InvoiceModel>> {
-  late LocalStorageService _storage;
-
-  @override
-  List<InvoiceModel> build() {
-    _storage = ref.read(localStorageServiceProvider);
-    return List.unmodifiable(
-      _storage.readList(_devisStorageKey, InvoiceModel.fromJson),
-    );
-  }
-
-  Future<void> addDevis(InvoiceModel devis) async {
-    if (devis.type != DocumentType.devis) {
-      throw ArgumentError('Le document ajouté doit être un devis.');
+    if (!(state.value ?? const []).any((invoice) => invoice.id == id)) return;
+    try {
+      await SupabaseService.client.from('invoices').delete().eq('id', id);
+      state = AsyncData(
+        (state.value ?? const [])
+            .where((invoice) => invoice.id != id)
+            .toList(),
+      );
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
     }
-    if (state.any((item) => item.id == devis.id)) {
-      throw StateError('Un devis avec cet identifiant existe déjà.');
-    }
-    await _save([...state, devis]);
-  }
-
-  Future<void> updateStatus(String id, DevisStatus status) async {
-    final index = state.indexWhere((devis) => devis.id == id);
-    if (index < 0) throw StateError('Devis introuvable.');
-    final updated = [...state];
-    updated[index] = updated[index].copyWith(devisStatus: status);
-    await _save(updated);
-  }
-
-  Future<void> _save(List<InvoiceModel> devis) async {
-    await _storage.saveList(
-      _devisStorageKey,
-      devis,
-      (document) => document.toJson(),
-    );
-    state = List.unmodifiable(devis);
   }
 }
 
 final unpaidInvoicesProvider = Provider<List<InvoiceModel>>((ref) {
-  final all = ref.watch(invoicesProvider);
+  final all = ref.watch(invoicesProvider).value ?? const [];
   return all
       .where((invoice) =>
           invoice.invoiceStatus == InvoiceStatus.unpaid ||
@@ -107,15 +88,8 @@ final unpaidInvoicesProvider = Provider<List<InvoiceModel>>((ref) {
       .toList();
 });
 
-final pendingDevisProvider = Provider<List<InvoiceModel>>((ref) {
-  final all = ref.watch(devisProvider);
-  return all
-      .where((devis) => devis.devisStatus == DevisStatus.pending)
-      .toList();
-});
-
 final invoicesStatsProvider = Provider<Map<String, int>>((ref) {
-  final invoices = ref.watch(invoicesProvider);
+  final invoices = ref.watch(invoicesProvider).value ?? const [];
   final devis = ref.watch(devisProvider);
   final totalCA = invoices
       .where((invoice) => invoice.invoiceStatus == InvoiceStatus.paid)

@@ -171,32 +171,67 @@ class InvoiceModel {
         'createdAt': createdAt.toIso8601String(),
       };
 
+  Map<String, dynamic> toSupabaseJson({required String? userId}) => {
+        'id': id,
+        'number': number,
+        'type': type.name,
+        'client_name': clientName,
+        'client_address': clientAddress,
+        'client_nif': clientNif,
+        'client_email': clientEmail,
+        'client_phone': clientPhone,
+        'issue_date': issueDate.toIso8601String(),
+        'due_date': dueDate.toIso8601String(),
+        'lines': lines.map((line) => line.toJson()).toList(),
+        'subtotal_ht': subtotalHT,
+        'tps': tps,
+        'total_ttc': totalTTC,
+        'notes': notes,
+        'conditions': conditions,
+        'subject': subject,
+        'invoice_status': invoiceStatus.name,
+        'devis_status': devisStatus.name,
+        'created_at': createdAt.toIso8601String(),
+        'user_id': userId,
+      };
+
   factory InvoiceModel.fromJson(Map<String, dynamic> json) => InvoiceModel(
         id: json['id'] as String,
         number: json['number'] as String,
         type: DocumentType.values.byName(json['type'] as String),
-        clientName: json['clientName'] as String,
-        clientAddress: json['clientAddress'] as String?,
-        clientNif: json['clientNif'] as String?,
-        clientEmail: json['clientEmail'] as String?,
-        clientPhone: json['clientPhone'] as String?,
-        issueDate: DateTime.parse(json['issueDate'] as String),
-        dueDate: DateTime.parse(json['dueDate'] as String),
+        clientName: (json['client_name'] ?? json['clientName']) as String,
+        clientAddress:
+            (json['client_address'] ?? json['clientAddress']) as String?,
+        clientNif: (json['client_nif'] ?? json['clientNif']) as String?,
+        clientEmail: (json['client_email'] ?? json['clientEmail']) as String?,
+        clientPhone: (json['client_phone'] ?? json['clientPhone']) as String?,
+        issueDate: DateTime.parse(
+            (json['issue_date'] ?? json['issueDate']) as String),
+        dueDate:
+            DateTime.parse((json['due_date'] ?? json['dueDate']) as String),
         lines: (json['lines'] as List<dynamic>)
             .map((line) =>
                 InvoiceLine.fromJson(Map<String, dynamic>.from(line as Map)))
             .toList(),
-        subtotalHT: (json['subtotalHT'] as num).toInt(),
+        subtotalHT:
+            ((json['subtotal_ht'] ?? json['subtotalHT']) as num).toInt(),
         tps: (json['tps'] as num).toInt(),
-        totalTTC: (json['totalTTC'] as num).toInt(),
+        totalTTC: ((json['total_ttc'] ?? json['totalTTC']) as num).toInt(),
         notes: json['notes'] as String?,
         conditions: json['conditions'] as String?,
         subject: json['subject'] as String?,
         invoiceStatus: InvoiceStatus.values
-            .byName(json['invoiceStatus'] as String? ?? 'unpaid'),
+            .byName(
+          (json['invoice_status'] ?? json['invoiceStatus']) as String? ??
+              'unpaid',
+        ),
         devisStatus: DevisStatus.values
-            .byName(json['devisStatus'] as String? ?? 'pending'),
-        createdAt: DateTime.parse(json['createdAt'] as String),
+            .byName(
+          (json['devis_status'] ?? json['devisStatus']) as String? ??
+              'pending',
+        ),
+        createdAt: DateTime.parse(
+            (json['created_at'] ?? json['createdAt']) as String),
       );
 
   /// Vérifie si le devis est expiré

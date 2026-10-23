@@ -498,7 +498,7 @@ class PdfService {
             : right
                 ? pw.TextAlign.right
                 : pw.TextAlign.left,
-        style: const pw.TextStyle(
+        style:  pw.TextStyle(
           color: PdfColors.white,
           fontWeight: pw.FontWeight.bold,
           fontSize: 10,

@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency.dart';
-import '../../../providers/invoices_provider.dart';
+import '../../../providers/devis_provider.dart';
 import '../../../shared/models/invoice_model.dart';
 import 'invoice_preview_screen.dart';
 

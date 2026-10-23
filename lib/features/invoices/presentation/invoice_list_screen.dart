@@ -14,26 +14,42 @@ class InvoiceListScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userEmail = ref.watch(authProvider.select((state) => state.user?.email));
-    final invoices = ref
-        .watch(invoicesProvider)
+    final userEmail =
+        ref.watch(authProvider.select((state) => state.user?.email));
+    final invoicesState = ref.watch(invoicesProvider);
+    final invoices = (invoicesState.value ?? const [])
         .where((invoice) => invoice.clientEmail == userEmail)
         .toList();
 
     return Scaffold(
       appBar: AppBar(title: const Text('Mes factures')),
       body: SafeArea(
-        child: invoices.isEmpty
-            ? _EmptyState()
-            : ListView.separated(
-                padding: const EdgeInsets.all(16),
-                itemCount: invoices.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  return _InvoiceCard(invoice: invoices[index]);
-                },
-              ),
+        child: invoicesState.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : invoicesState.hasError
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Impossible de charger les factures.'),
+                        TextButton(
+                          onPressed: () => ref.invalidate(invoicesProvider),
+                          child: const Text('Réessayer'),
+                        ),
+                      ],
+                    ),
+                  )
+                : invoices.isEmpty
+                    ? _EmptyState()
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: invoices.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          return _InvoiceCard(invoice: invoices[index]);
+                        },
+                      ),
       ),
     );
   }

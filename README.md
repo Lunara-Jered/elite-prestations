@@ -37,6 +37,14 @@ invitées sont autorisées. Configurez les politiques RLS adaptées à ces table
 Pour qu'une réservation soit rattachée à un compte et filtrée par utilisateur,
 l'utilisateur doit être authentifié auprès de Supabase.
 
+La table `invoices` doit fournir les colonnes `id` (texte), `number`, `type`,
+`client_name`, `client_address`, `client_nif`, `client_email`, `client_phone`,
+`issue_date`, `due_date`, `lines` (JSON), `subtotal_ht`, `tps`, `total_ttc`,
+`notes`, `conditions`, `subject`, `invoice_status`, `devis_status`,
+`created_at` et `user_id`. Les factures sont lues, créées et mises à jour dans
+Supabase ; configurez ses politiques RLS pour autoriser les opérations adaptées.
+Les devis restent stockés localement.
+
 La confirmation ouvre WhatsApp avec un récapitulatif prérempli. Pour des raisons
 de consentement, l'utilisateur doit appuyer sur « Envoyer » dans WhatsApp.
 

@@ -15,7 +15,8 @@ class DashboardScreen extends ConsumerWidget {
     final stats = ref.watch(invoicesStatsProvider);
     final reservations = ref.watch(activeReservationsProvider);
     final reservationsState = ref.watch(reservationsProvider);
-    final invoices = ref.watch(invoicesProvider);
+    final invoicesState = ref.watch(invoicesProvider);
+    final invoices = invoicesState.value ?? const [];
 
     return SafeArea(
       child: ListView(
@@ -151,7 +152,21 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            if (invoices.isEmpty)
+            if (invoicesState.isLoading)
+              const LinearProgressIndicator()
+            else if (invoicesState.hasError)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Impossible de charger les factures : '
+                      '${invoicesState.error}'),
+                  TextButton(
+                    onPressed: () => ref.invalidate(invoicesProvider),
+                    child: const Text('Réessayer'),
+                  ),
+                ],
+              )
+            else if (invoices.isEmpty)
               const _EmptyCard(text: 'Aucune facture')
             else
               ...invoices.take(3).map(
