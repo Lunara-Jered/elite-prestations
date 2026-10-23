@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SupabaseConfig {
   SupabaseConfig._();
 
-  static const url = String.fromEnvironment('https://yhxdvbguztnirevcwnlz.supabase.co/rest/v1/');
+  static const url = String.fromEnvironment('https://yhxdvbguztnirevcwnlz.supabase.co');
   static const anonKey = String.fromEnvironment('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR2Ymd1enRuaXJldmN3bmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NTcwOTAsImV4cCI6MjEwODMzMzA5MH0.sYhIWKv-sA9emehx7ADh72auKV5nGsFrgEJBxkFbAfQ');
 
   static Object? initializationError;
