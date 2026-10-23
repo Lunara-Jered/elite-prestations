@@ -226,7 +226,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
             const SizedBox(height: 24),
-
+            // Ajoute ce bouton juste avant le bouton "Se déconnecter"
+            ElevatedButton.icon(
+              onPressed: () => context.go('/admin/dashboard'),
+              icon: const Icon(Icons.admin_panel_settings),
+              label: const Text('Accéder au Dashboard Admin'),
+            ),
+            const SizedBox(height: 16),
             // ─────────────────────────────────
             // DÉCONNEXION
             // ─────────────────────────────────
