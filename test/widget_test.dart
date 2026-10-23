@@ -39,6 +39,6 @@ void main() {
     expect(find.byType(MaterialApp), findsOneWidget);
 
     // Nettoyage
-    await mockHttpClient.close();
+    mockHttpClient.close();
   });
 }
