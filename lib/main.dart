@@ -1,43 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart'; 
 
 import 'app.dart';
-import 'core/services/local_storage_service.dart';
-import 'core/services/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await initializeDateFormatting('fr_FR', null);
-  final preferences = await SharedPreferences.getInstance();
-  if (SupabaseConfig.isConfigured) {
-    try {
-      await Supabase.initialize(
-        url: SupabaseConfig.url,
-        anonKey: SupabaseConfig.anonKey,
-      );
-    } catch (error) {
-      SupabaseConfig.initializationError = error;
-    }
-  }
+  // 1. Initialisation de Supabase
+  await Supabase.initialize(
+    url: 'https://yhxdvbguztnirevcwnlz.supabase.co'
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR2Ymd1enRuaXJldmN3bmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NTcwOTAsImV4cCI6MjEwODMzMzA5MH0.sYhIWKv-sA9emehx7ADh72auKV5nGsFrgEJBxkFbAfQ', // <-- À REMPLACER
+  );
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  // 2. Initialisation des dates en français
+  await initializeDateFormatting('fr_FR', null);
 
   runApp(
-    ProviderScope(
-      overrides: [
-        localStorageServiceProvider.overrideWithValue(
-          LocalStorageService(preferences),
-        ),
-      ],
-      child: const ElitePrestationsApp(),
+    const ProviderScope(
+      child: ElitePrestationsApp(),
     ),
   );
 }
