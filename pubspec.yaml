@@ -64,3 +64,8 @@ flutter:
           weight: 600
         - asset: assets/fonts/Inter_18pt-Bold.ttf
           weight: 700
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icon/img_logo.png"
+  min_sdk_android: 21
