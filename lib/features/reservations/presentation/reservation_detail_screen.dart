@@ -17,6 +17,21 @@ class ReservationDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final reservationsState = ref.watch(reservationsProvider);
+    if (reservationsState.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (reservationsState.hasError) {
+      return Scaffold(
+        body: Center(
+          child: Text(
+            'Impossible de charger la réservation : ${reservationsState.error}',
+          ),
+        ),
+      );
+    }
     final reservations = ref.watch(myReservationsProvider);
     final matchingReservations =
         reservations.where((reservation) => reservation.id == reservationId);

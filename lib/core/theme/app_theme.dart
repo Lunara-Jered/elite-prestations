@@ -47,7 +47,6 @@ class AppTheme {
       textTheme: GoogleFonts.interTextTheme(
         isLight ? ThemeData.light().textTheme : ThemeData.dark().textTheme,
       ),
-
       // ─────────────────────────────────────────
       // APPBAR
       // ─────────────────────────────────────────

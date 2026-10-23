@@ -1,69 +1,148 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/services/local_storage_service.dart';
+import '../core/services/supabase_service.dart';
 import '../shared/models/reservation_model.dart';
 import 'auth_provider.dart';
 
-const _reservationsStorageKey = 'reservations';
-
 final reservationsProvider =
-    NotifierProvider<ReservationsNotifier, List<ReservationModel>>(
+    AsyncNotifierProvider<ReservationsNotifier, List<ReservationModel>>(
   ReservationsNotifier.new,
 );
 
-class ReservationsNotifier extends Notifier<List<ReservationModel>> {
-  late LocalStorageService _storage;
-
+class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
   @override
-  List<ReservationModel> build() {
-    _storage = ref.read(localStorageServiceProvider);
-    return List.unmodifiable(
-      _storage.readList(_reservationsStorageKey, ReservationModel.fromJson),
-    );
+  Future<List<ReservationModel>> build() async {
+    try {
+      final client = SupabaseService.client;
+      final isLocalAdmin =
+          ref.watch(authProvider.select((auth) => auth.user?.role == 'ADMIN'));
+      final userId = client.auth.currentUser?.id;
+      final data = isLocalAdmin
+          ? await client.from('reservations').select().order(
+                'created_at',
+                ascending: false,
+              )
+          : await client
+              .from('reservations')
+              .select()
+              .eq('user_id', userId ?? '')
+              .order('created_at', ascending: false);
+      return data
+          .map((json) =>
+              ReservationModel.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<List<ReservationModel>> getUserReservations() async {
+    try {
+      final userId = SupabaseService.client.auth.currentUser?.id;
+      if (userId == null) {
+        throw StateError(
+          'Connectez-vous avec Supabase pour consulter vos réservations.',
+        );
+      }
+      final data = await SupabaseService.client
+          .from('reservations')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: false);
+      final reservations = data
+          .map((json) =>
+              ReservationModel.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+      state = AsyncData(reservations);
+      return reservations;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
+  }
+
+  Future<ReservationModel> createReservation(
+    ReservationModel reservation,
+  ) async {
+    try {
+      final userId = SupabaseService.client.auth.currentUser?.id;
+      final row = await SupabaseService.client
+          .from('reservations')
+          .insert(reservation.toSupabaseJson(userId: userId))
+          .select()
+          .single();
+      final created = ReservationModel.fromJson(
+        Map<String, dynamic>.from(row),
+      );
+      state = AsyncData([...state.value ?? const [], created]);
+      return created;
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> addReservation(ReservationModel reservation) async {
-    if (state.any((item) => item.id == reservation.id)) {
-      throw StateError('Une réservation avec cet identifiant existe déjà.');
-    }
-    await _save([...state, reservation]);
+    await createReservation(reservation);
   }
 
   Future<void> updateStatus(String id, ReservationStatus status) async {
-    final index = state.indexWhere((reservation) => reservation.id == id);
-    if (index < 0) throw StateError('Réservation introuvable.');
-    final updated = [...state];
-    updated[index] = updated[index].copyWith(status: status);
-    await _save(updated);
+    try {
+      await SupabaseService.client
+          .from('reservations')
+          .update({'status': status.name})
+          .eq('id', id);
+      final reservations = state.value ?? const [];
+      state = AsyncData([
+        for (final reservation in reservations)
+          if (reservation.id == id)
+            reservation.copyWith(status: status)
+          else
+            reservation,
+      ]);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> updateReservation(ReservationModel reservation) async {
-    final index = state.indexWhere((item) => item.id == reservation.id);
-    if (index < 0) throw StateError('Réservation introuvable.');
-    final updated = [...state];
-    updated[index] = reservation;
-    await _save(updated);
+    try {
+      await SupabaseService.client
+          .from('reservations')
+          .update(reservation.toSupabaseJson(
+            userId: SupabaseService.client.auth.currentUser?.id,
+          ))
+          .eq('id', reservation.id);
+      final reservations = state.value ?? const [];
+      state = AsyncData([
+        for (final item in reservations)
+          if (item.id == reservation.id) reservation else item,
+      ]);
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> removeReservation(String id) async {
-    if (!state.any((reservation) => reservation.id == id)) return;
-    await _save(
-      state.where((reservation) => reservation.id != id).toList(),
-    );
-  }
-
-  Future<void> _save(List<ReservationModel> reservations) async {
-    await _storage.saveList(
-      _reservationsStorageKey,
-      reservations,
-      (reservation) => reservation.toJson(),
-    );
-    state = List.unmodifiable(reservations);
+    try {
+      await SupabaseService.client.from('reservations').delete().eq('id', id);
+      state = AsyncData(
+        (state.value ?? const [])
+            .where((reservation) => reservation.id != id)
+            .toList(),
+      );
+    } catch (error, stackTrace) {
+      state = AsyncError(error, stackTrace);
+      rethrow;
+    }
   }
 }
 
 final activeReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final all = ref.watch(reservationsProvider);
+  final all = ref.watch(reservationsProvider).value ?? const [];
   return all
       .where((reservation) =>
           reservation.status == ReservationStatus.pending ||
@@ -73,10 +152,11 @@ final activeReservationsProvider = Provider<List<ReservationModel>>((ref) {
 });
 
 final myReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final email = ref.watch(authProvider.select((state) => state.user?.email));
-  return ref
-      .watch(reservationsProvider)
-      .where((reservation) => reservation.clientEmail == email)
+  if (!SupabaseConfig.isConfigured) return const [];
+  final userId = SupabaseService.client.auth.currentUser?.id;
+  if (userId == null) return const [];
+  return (ref.watch(reservationsProvider).value ?? const [])
+      .where((reservation) => reservation.clientId == userId)
       .toList();
 });
 
@@ -102,14 +182,14 @@ final myCancelledReservationsProvider = Provider<List<ReservationModel>>((ref) {
 });
 
 final pastReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final all = ref.watch(reservationsProvider);
+  final all = ref.watch(reservationsProvider).value ?? const [];
   return all
       .where((reservation) => reservation.status == ReservationStatus.completed)
       .toList();
 });
 
 final cancelledReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final all = ref.watch(reservationsProvider);
+  final all = ref.watch(reservationsProvider).value ?? const [];
   return all
       .where((reservation) => reservation.status == ReservationStatus.cancelled)
       .toList();

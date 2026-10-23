@@ -17,8 +17,28 @@ flutter pub get
 ## Lancement
 
 ```bash
-flutter run
+flutter run \
+  --dart-define=SUPABASE_URL=https://your-project-ref.supabase.co \
+  --dart-define=SUPABASE_ANON_KEY=your-public-anon-key
 ```
+
+L'application lit `SUPABASE_URL` et `SUPABASE_ANON_KEY` au démarrage. Seule la
+clé publique `anon` doit être fournie au client Flutter ; ne placez jamais la
+clé `service_role` dans l'application. Sans ces variables, les écrans concernés
+affichent une erreur de configuration au lieu de simuler une connexion réussie.
+
+Le projet Supabase doit fournir une table `services` avec les colonnes `id`,
+`name`, `slug`, `description`, `features`, `base_price`, `unit` et `image_url`.
+La table `reservations` doit fournir `id`, `reference`, `service_name`,
+`start_date`, `end_date`, `duration`, `total_ttc`, `deposit`, `status`,
+`options`, `created_at`, `user_id`, `client_name` et `client_email`. Les colonnes
+`id` sont générées par la base ; `user_id` doit accepter `NULL` si les réservations
+invitées sont autorisées. Configurez les politiques RLS adaptées à ces tables.
+Pour qu'une réservation soit rattachée à un compte et filtrée par utilisateur,
+l'utilisateur doit être authentifié auprès de Supabase.
+
+La confirmation ouvre WhatsApp avec un récapitulatif prérempli. Pour des raisons
+de consentement, l'utilisateur doit appuyer sur « Envoyer » dans WhatsApp.
 
 ## Configuration
 

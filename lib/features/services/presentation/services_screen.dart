@@ -67,7 +67,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   @override
   Widget build(BuildContext context) {
     final services = ref.watch(servicesProvider);
-    final filtered = _applyFilters(services);
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Scaffold(
@@ -187,23 +186,43 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
             // LISTE DES SERVICES
             // ─────────────────────────────────
             Expanded(
-              child: filtered.isEmpty
-                  ? _EmptySearch()
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      itemCount: filtered.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: 16),
-                      itemBuilder: (context, index) {
-                        final service = filtered[index];
-                        return _ServiceListTile(
-                          service: service,
-                          onTap: () {
-                            context.go('/services/${service.slug}');
-                          },
-                        );
-                      },
-                    ),
+              child: services.when(
+                data: (serviceList) {
+                  final filtered = _applyFilters(serviceList);
+                  if (filtered.isEmpty) return _EmptySearch();
+                  return ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    itemCount: filtered.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final service = filtered[index];
+                      return _ServiceListTile(
+                        service: service,
+                        onTap: () {
+                          context.go('/services/${service.slug}');
+                        },
+                      );
+                    },
+                  );
+                },
+                loading: () => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                error: (error, stackTrace) => Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('Impossible de charger les services : $error'),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: () => ref.invalidate(servicesProvider),
+                        child: const Text('Réessayer'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),

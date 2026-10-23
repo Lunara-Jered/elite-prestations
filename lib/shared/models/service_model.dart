@@ -30,14 +30,27 @@ class ServiceModel {
         'imageUrl': imageUrl,
       };
 
+  Map<String, dynamic> toSupabaseJson() => {
+        'name': name,
+        'slug': slug,
+        'description': description,
+        'features': features,
+        'base_price': basePrice,
+        'unit': unit,
+        'image_url': imageUrl,
+      };
+
   factory ServiceModel.fromJson(Map<String, dynamic> json) => ServiceModel(
-        id: json['id'] as String,
+        id: '${json['id']}',
         name: json['name'] as String,
         slug: json['slug'] as String,
-        description: json['description'] as String,
-        features: (json['features'] as List<dynamic>).cast<String>(),
-        basePrice: (json['basePrice'] as num).toInt(),
-        unit: json['unit'] as String,
-        imageUrl: json['imageUrl'] as String?,
+        description: json['description'] as String? ?? '',
+        features: (json['features'] as List<dynamic>? ?? const [])
+            .map((feature) => feature.toString())
+            .toList(),
+        basePrice: ((json['base_price'] ?? json['basePrice'] ?? 0) as num)
+            .toInt(),
+        unit: json['unit'] as String? ?? 'forfait',
+        imageUrl: (json['image_url'] ?? json['imageUrl']) as String?,
       );
 }

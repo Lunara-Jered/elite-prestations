@@ -14,6 +14,7 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(invoicesStatsProvider);
     final reservations = ref.watch(activeReservationsProvider);
+    final reservationsState = ref.watch(reservationsProvider);
     final invoices = ref.watch(invoicesProvider);
 
     return SafeArea(
@@ -77,7 +78,23 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            if (reservations.isEmpty)
+            if (reservationsState.isLoading)
+              const LinearProgressIndicator()
+            else if (reservationsState.hasError)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Impossible de charger les réservations : '
+                    '${reservationsState.error}',
+                  ),
+                  TextButton(
+                    onPressed: () => ref.invalidate(reservationsProvider),
+                    child: const Text('Réessayer'),
+                  ),
+                ],
+              )
+            else if (reservations.isEmpty)
               const _EmptyCard(text: 'Aucune réservation active')
             else
               ...reservations.take(3).map(

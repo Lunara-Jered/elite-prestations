@@ -75,24 +75,43 @@ class ReservationModel {
         'clientEmail': clientEmail,
       };
 
+  Map<String, dynamic> toSupabaseJson({required String? userId}) => {
+        'reference': reference,
+        'service_name': serviceName,
+        'start_date': startDate.toIso8601String(),
+        'end_date': endDate.toIso8601String(),
+        'duration': duration,
+        'total_ttc': totalTTC,
+        'deposit': deposit,
+        'status': status.name,
+        'options': options.map((option) => option.toJson()).toList(),
+        'created_at': createdAt.toIso8601String(),
+        'user_id': userId,
+        'client_name': clientName,
+        'client_email': clientEmail,
+      };
+
   factory ReservationModel.fromJson(Map<String, dynamic> json) =>
       ReservationModel(
-        id: json['id'] as String,
+        id: '${json['id']}',
         reference: json['reference'] as String,
-        serviceName: json['serviceName'] as String,
-        startDate: DateTime.parse(json['startDate'] as String),
-        endDate: DateTime.parse(json['endDate'] as String),
+        serviceName: (json['service_name'] ?? json['serviceName']) as String,
+        startDate:
+            DateTime.parse((json['start_date'] ?? json['startDate']) as String),
+        endDate:
+            DateTime.parse((json['end_date'] ?? json['endDate']) as String),
         duration: (json['duration'] as num).toInt(),
-        totalTTC: (json['totalTTC'] as num).toInt(),
+        totalTTC: ((json['total_ttc'] ?? json['totalTTC']) as num).toInt(),
         deposit: (json['deposit'] as num).toInt(),
         status: ReservationStatus.values.byName(json['status'] as String),
         options: (json['options'] as List<dynamic>? ?? [])
             .map((item) =>
                 BookingOption.fromJson(Map<String, dynamic>.from(item as Map)))
             .toList(),
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        clientId: json['clientId'] as String?,
-        clientName: json['clientName'] as String?,
-        clientEmail: json['clientEmail'] as String?,
+        createdAt:
+            DateTime.parse((json['created_at'] ?? json['createdAt']) as String),
+        clientId: (json['user_id'] ?? json['clientId']) as String?,
+        clientName: (json['client_name'] ?? json['clientName']) as String?,
+        clientEmail: (json['client_email'] ?? json['clientEmail']) as String?,
       );
 }

@@ -78,24 +78,35 @@ class HomeScreen extends ConsumerWidget {
                 ),
 
                 SliverToBoxAdapter(
-                  child: SizedBox(
-                    height: 260,
-                    child: ListView.separated(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: services.length,
-                      separatorBuilder: (context, index) => const SizedBox(width: 12),
-                      itemBuilder: (context, index) {
-                        return SizedBox(
-                          width: 280,
-                          child: ServiceCard(
-                            service: services[index],
-                            onTap: () {
-                              context.go('/services');
-                            },
-                          ),
-                        );
-                      },
+                  child: services.when(
+                    data: (serviceList) => SizedBox(
+                      height: 260,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: serviceList.length,
+                        separatorBuilder: (context, index) =>
+                            const SizedBox(width: 12),
+                        itemBuilder: (context, index) {
+                          return SizedBox(
+                            width: 280,
+                            child: ServiceCard(
+                              service: serviceList[index],
+                              onTap: () => context.go('/services'),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    loading: () => const SizedBox(
+                      height: 260,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (error, stackTrace) => SizedBox(
+                      height: 260,
+                      child: Center(
+                        child: Text('Impossible de charger les services : $error'),
+                      ),
                     ),
                   ),
                 ),

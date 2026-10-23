@@ -132,7 +132,11 @@ class PdfService {
             pw.SizedBox(height: 8),
             pw.Text(
               'N° ${doc.number}',
+<<<<<<< Updated upstream
               style: pw.TextStyle(
+=======
+              style:  pw.TextStyle(
+>>>>>>> Stashed changes
                 fontSize: 12,
                 fontWeight: pw.FontWeight.bold,
               ),
@@ -174,13 +178,21 @@ class PdfService {
         children: [
           pw.Text(
             'CLIENT',
+<<<<<<< Updated upstream
             style: pw.TextStyle(
+=======
+            style:  pw.TextStyle(
+>>>>>>> Stashed changes
               fontSize: 11,
               fontWeight: pw.FontWeight.bold,
               color: primaryColor,
             ),
           ),
+<<<<<<< Updated upstream
           pw.SizedBox(height: 8),
+=======
+           pw.SizedBox(height: 8),
+>>>>>>> Stashed changes
           pw.Text(
             doc.clientName,
             style: pw.TextStyle(

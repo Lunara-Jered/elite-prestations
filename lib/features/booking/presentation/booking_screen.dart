@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../core/constants/company_info.dart';
+import '../../../core/services/whatsapp_service.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/invoices_provider.dart';
 import '../../../providers/reservations_provider.dart';
@@ -227,24 +229,53 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       createdAt: now,
     );
 
-    var reservationSaved = false;
+    ReservationModel? savedReservation;
     var invoiceSaved = false;
     try {
-      await ref.read(reservationsProvider.notifier).addReservation(reservation);
-      reservationSaved = true;
+      final createdReservation = await ref
+          .read(reservationsProvider.notifier)
+          .createReservation(reservation);
+      savedReservation = createdReservation;
       await ref.read(invoicesProvider.notifier).addInvoice(invoice);
       invoiceSaved = true;
       ref.read(bookingProvider.notifier).reset();
       if (!context.mounted) return;
+
+      String? whatsappError;
+      try {
+        await WhatsAppService.sendReservationNotification(
+          AppStrings.whatsapp,
+          '${createdReservation.reference} - ${createdReservation.serviceName}, '
+          'du ${createdReservation.startDate.toLocal().toString().split(' ').first} '
+          'au ${createdReservation.endDate.toLocal().toString().split(' ').first}, '
+          'total ${createdReservation.totalTTC} FCFA, acompte '
+          '${createdReservation.deposit} FCFA.',
+        );
+      } catch (error) {
+        whatsappError = error.toString();
+      }
+
       await showDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (dialogContext) => AlertDialog(
           icon: const Icon(Icons.check_circle_outline),
           title: const Text('Réservation enregistrée'),
-          content: Text(
-            'Votre réservation ${reservation.reference} est enregistrée. '
-            'La facture ${invoice.number} est disponible dans votre espace.',
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Votre réservation ${createdReservation.reference} est enregistrée. '
+                'La facture ${invoice.number} est disponible dans votre espace.',
+              ),
+              const SizedBox(height: 8),
+              Text(
+                whatsappError == null
+                    ? 'WhatsApp est ouvert avec le récapitulatif. Appuyez sur Envoyer pour transmettre le message.'
+                    : 'La réservation est enregistrée, mais WhatsApp n’a pas pu être ouvert : $whatsappError',
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -257,11 +288,11 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       if (context.mounted) context.go('/reservations');
     } catch (error) {
       Object reportedError = error;
-      if (reservationSaved && !invoiceSaved) {
+      if (savedReservation != null && !invoiceSaved) {
         try {
           await ref
               .read(reservationsProvider.notifier)
-              .removeReservation(reservation.id);
+              .removeReservation(savedReservation.id);
         } catch (cleanupError) {
           reportedError = StateError(
             '$error. Le nettoyage de la réservation a également échoué : $cleanupError',

@@ -79,28 +79,43 @@ class _ReservationList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reservations = switch (type) {
-      _ListType.active => ref.watch(myActiveReservationsProvider),
-      _ListType.past => ref.watch(myPastReservationsProvider),
-      _ListType.cancelled => ref.watch(myCancelledReservationsProvider),
-    };
-
-    if (reservations.isEmpty) {
-      return _EmptyState(type: type);
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: reservations.length,
-      separatorBuilder: (context, index) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        return ReservationCard(
-          reservation: reservations[index],
-          onTap: () {
-            context.go('/reservations/${reservations[index].id}');
+    final reservationsState = ref.watch(reservationsProvider);
+    return reservationsState.when(
+      data: (_) {
+        final reservations = switch (type) {
+          _ListType.active => ref.watch(myActiveReservationsProvider),
+          _ListType.past => ref.watch(myPastReservationsProvider),
+          _ListType.cancelled => ref.watch(myCancelledReservationsProvider),
+        };
+        if (reservations.isEmpty) return _EmptyState(type: type);
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: reservations.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            return ReservationCard(
+              reservation: reservations[index],
+              onTap: () {
+                context.go('/reservations/${reservations[index].id}');
+              },
+            );
           },
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, stackTrace) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Impossible de charger vos réservations : $error'),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () => ref.invalidate(reservationsProvider),
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

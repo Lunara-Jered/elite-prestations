@@ -17,10 +17,26 @@ class ServiceDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final services = ref.watch(servicesProvider);
-    final service = services.firstWhere(
-      (s) => s.slug == slug,
-      orElse: () => services.first,
-    );
+    if (services.isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (services.hasError) {
+      return Scaffold(
+        body: Center(
+          child: Text('Impossible de charger le service : ${services.error}'),
+        ),
+      );
+    }
+    final serviceList = services.requireValue;
+    final matchingServices = serviceList.where((item) => item.slug == slug);
+    if (matchingServices.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Text('Service introuvable.')),
+      );
+    }
+    final service = matchingServices.first;
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return Scaffold(
