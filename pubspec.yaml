@@ -33,7 +33,7 @@ dependencies:
   supabase_flutter: ^2.0.0
   whatsapp_launcher: ^1.0.2
   image: ^4.3.0
-  supabase_test: ^0.1.0
+  supabase_test: ^0.4.3
   flutter_lints: ^6.0.0
   
 dependency_overrides:
