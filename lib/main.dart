@@ -10,7 +10,7 @@ void main() async {
 
   // 1. Initialisation de Supabase
   await Supabase.initialize(
-    url: 'https://yhxdvbguztnirevcwnlz.supabase.co'
+    url: 'https://yhxdvbguztnirevcwnlz.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR2Ymd1enRuaXJldmN3bmx6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI3NTcwOTAsImV4cCI6MjEwODMzMzA5MH0.sYhIWKv-sA9emehx7ADh72auKV5nGsFrgEJBxkFbAfQ', // <-- À REMPLACER
   );
 
