@@ -13,9 +13,9 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(invoicesStatsProvider);
-    // On utilise le provider global des réservations
     final reservationsAsync = ref.watch(reservationsProvider);
-    final invoices = ref.watch(invoicesProvider);
+    // On récupère l'état asynchrone des factures
+    final invoicesAsync = ref.watch(invoicesProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tableau de bord')),
@@ -54,7 +54,6 @@ class DashboardScreen extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Center(child: Text('Erreur: $err')),
               data: (reservations) {
-                // On filtre les réservations actives
                 final activeCount = reservations.where((r) => 
                   r.status == ReservationStatus.pending || 
                   r.status == ReservationStatus.confirmed || 
@@ -101,7 +100,6 @@ class DashboardScreen extends ConsumerWidget {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (err, stack) => Center(child: Text('Erreur: $err')),
               data: (reservations) {
-                // On garde uniquement les réservations actives
                 final activeReservations = reservations.where((r) => 
                   r.status == ReservationStatus.pending || 
                   r.status == ReservationStatus.confirmed || 
@@ -120,9 +118,7 @@ class DashboardScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(context).dividerColor,
-                        ),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                       ),
                       child: Row(
                         children: [
@@ -170,19 +166,24 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            if (invoices.isEmpty)
-              _EmptyCard(text: 'Aucune facture')
-            else
-              ...invoices.take(3).map(
+            // On utilise .when() pour les factures aussi
+            invoicesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Erreur: $err')),
+              data: (invoices) {
+                if (invoices.isEmpty) {
+                  return _EmptyCard(text: 'Aucune facture');
+                }
+
+                return Column(
+                  children: invoices.take(3).map(
                     (inv) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Theme.of(context).dividerColor,
-                        ),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                       ),
                       child: Row(
                         children: [
@@ -212,7 +213,10 @@ class DashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ),
+                  ).toList(),
+                );
+              },
+            ),
 
             const SizedBox(height: 24),
 
@@ -280,11 +284,7 @@ class _KpiCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: AppColors.white.withValues(alpha: 0.7),
-            size: 20,
-          ),
+          Icon(icon, color: AppColors.white.withValues(alpha: 0.7), size: 20),
           const SizedBox(height: 12),
           Text(
             value,
@@ -297,10 +297,7 @@ class _KpiCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
-              color: AppColors.gray300,
-              fontSize: 11,
-            ),
+            style: TextStyle(color: AppColors.gray300, fontSize: 11),
           ),
         ],
       ),
@@ -324,10 +321,7 @@ class _EmptyCard extends StatelessWidget {
       child: Center(
         child: Text(
           text,
-          style: const TextStyle(
-            color: AppColors.textMuted,
-            fontSize: 13,
-          ),
+          style: const TextStyle(color: AppColors.textMuted, fontSize: 13),
         ),
       ),
     );
@@ -362,10 +356,7 @@ class _QuickAction extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
             ),
           ],
         ),
