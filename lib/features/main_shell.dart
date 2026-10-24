@@ -21,7 +21,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     '/home',
     '/services',
     '/reservations',
-    '/profile',
+  
   ];
 
   @override
