@@ -17,181 +17,185 @@ class ReservationDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reservationsState = ref.watch(reservationsProvider);
-    if (reservationsState.isLoading) {
-      return const Scaffold(
+    // On écoute le provider principal qui contient TOUTES les réservations (ou celles de l'user)
+    final reservationsAsync = ref.watch(reservationsProvider);
+
+    return reservationsAsync.when(
+      loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),
-      );
-    }
-    if (reservationsState.hasError) {
-      return Scaffold(
-        body: Center(
-          child: Text(
-            'Impossible de charger la réservation : ${reservationsState.error}',
-          ),
-        ),
-      );
-    }
-    final reservations = ref.watch(myReservationsProvider);
-    final matchingReservations =
-        reservations.where((reservation) => reservation.id == reservationId);
-    if (matchingReservations.isEmpty) {
-      return Scaffold(
+      ),
+      error: (error, stack) => Scaffold(
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.go('/reservations'),
           ),
-          title: const Text('Détail réservation'),
         ),
-        body: const Center(child: Text('Réservation introuvable.')),
-      );
-    }
-    final reservation = matchingReservations.first;
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/reservations'),
-        ),
-        title: const Text('Détail réservation'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: () {},
-          ),
-        ],
+        body: Center(child: Text('Erreur : $error')),
       ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            // ─────────────────────────────────
-            // HEADER : référence + statut
-            // ─────────────────────────────────
-            Row(
+      data: (reservations) {
+        // On cherche la réservation correspondante
+        final matching = reservations.where((r) => r.id == reservationId);
+        
+        if (matching.isEmpty) {
+          return Scaffold(
+            appBar: AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/reservations'),
+              ),
+              title: const Text('Détail réservation'),
+            ),
+            body: const Center(child: Text('Réservation introuvable.')),
+          );
+        }
+
+        final reservation = matching.first;
+
+        return Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => context.go('/reservations'),
+            ),
+            title: const Text('Détail réservation'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.share_outlined),
+                onPressed: () {},
+              ),
+            ],
+          ),
+          body: SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                Text(
-                  reservation.reference,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                // ─────────────────────────────────
+                // HEADER : référence + statut
+                // ─────────────────────────────────
+                Row(
+                  children: [
+                    Text(
+                      reservation.reference,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const Spacer(),
+                    StatusBadge(status: reservation.status),
+                  ],
                 ),
-                const Spacer(),
-                StatusBadge(status: reservation.status),
+                const SizedBox(height: 24),
+
+                // ─────────────────────────────────
+                // SERVICE
+                // ─────────────────────────────────
+                _DetailCard(
+                  icon: Icons.room_service_outlined,
+                  title: 'Prestation',
+                  child: Text(
+                    reservation.serviceName,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // ─────────────────────────────────
+                // DATES
+                // ─────────────────────────────────
+                _DetailCard(
+                  icon: Icons.event,
+                  title: 'Dates',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _formatRange(reservation.startDate, reservation.duration),
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${reservation.duration} jour${reservation.duration > 1 ? 's' : ''}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // ─────────────────────────────────
+                // PRIX
+                // ─────────────────────────────────
+                _DetailCard(
+                  icon: Icons.payments_outlined,
+                  title: 'Montant',
+                  child: Column(
+                    children: [
+                      _PriceRow(
+                        label: 'Total TTC',
+                        amount: reservation.totalTTC,
+                      ),
+                      const SizedBox(height: 8),
+                      _PriceRow(
+                        label: 'Acompte payé',
+                        amount: reservation.deposit,
+                      ),
+                      const Divider(height: 24),
+                      _PriceRow(
+                        label: 'Reste à payer',
+                        amount: reservation.totalTTC - reservation.deposit,
+                        bold: true,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                // ─────────────────────────────────
+                // ACTIONS
+                // ─────────────────────────────────
+                if (reservation.status != ReservationStatus.cancelled &&
+                    reservation.status != ReservationStatus.completed) ...[
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Téléchargement bientôt')),
+                      );
+                    },
+                    icon: const Icon(Icons.download_outlined, size: 18),
+                    label: const Text('Télécharger la facture'),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () async {
+                      final uri = Uri.parse(AppStrings.whatsappLink);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    icon: const Icon(Icons.chat_bubble_outline, size: 18),
+                    label: const Text('Contacter par WhatsApp'),
+                  ),
+                  const SizedBox(height: 12),
+                  if (reservation.status == ReservationStatus.pending)
+                    TextButton(
+                      onPressed: () => _confirmCancel(context, ref, reservationId),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.error,
+                      ),
+                      child: const Text('Annuler la réservation'),
+                    ),
+                ],
               ],
             ),
-            const SizedBox(height: 24),
-
-            // ─────────────────────────────────
-            // SERVICE
-            // ─────────────────────────────────
-            _DetailCard(
-              icon: Icons.room_service_outlined,
-              title: 'Prestation',
-              child: Text(
-                reservation.serviceName,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // ─────────────────────────────────
-            // DATES
-            // ─────────────────────────────────
-            _DetailCard(
-              icon: Icons.event,
-              title: 'Dates',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _formatRange(reservation.startDate, reservation.duration),
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${reservation.duration} jour${reservation.duration > 1 ? 's' : ''}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textMuted,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // ─────────────────────────────────
-            // PRIX
-            // ─────────────────────────────────
-            _DetailCard(
-              icon: Icons.payments_outlined,
-              title: 'Montant',
-              child: Column(
-                children: [
-                  _PriceRow(
-                    label: 'Total TTC',
-                    amount: reservation.totalTTC,
-                  ),
-                  const SizedBox(height: 8),
-                  _PriceRow(
-                    label: 'Acompte payé',
-                    amount: reservation.deposit,
-                  ),
-                  const Divider(height: 24),
-                  _PriceRow(
-                    label: 'Reste à payer',
-                    amount: reservation.totalTTC - reservation.deposit,
-                    bold: true,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // ─────────────────────────────────
-            // ACTIONS
-            // ─────────────────────────────────
-            if (reservation.status != ReservationStatus.cancelled &&
-                reservation.status != ReservationStatus.completed) ...[
-              ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: télécharger facture
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Téléchargement bientôt')),
-                  );
-                },
-                icon: const Icon(Icons.download_outlined, size: 18),
-                label: const Text('Télécharger la facture'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final uri = Uri.parse(AppStrings.whatsappLink);
-                  if (await canLaunchUrl(uri)) {
-                    await launchUrl(uri,
-                        mode: LaunchMode.externalApplication);
-                  }
-                },
-                icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                label: const Text('Contacter par WhatsApp'),
-              ),
-              const SizedBox(height: 12),
-              if (reservation.status == ReservationStatus.pending)
-                TextButton(
-                  onPressed: () => _confirmCancel(context),
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                  ),
-                  child: const Text('Annuler la réservation'),
-                ),
-            ],
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -202,7 +206,7 @@ class ReservationDetailScreen extends ConsumerWidget {
     return 'Du ${fmt.format(start)} au ${fmt.format(end)}';
   }
 
-  void _confirmCancel(BuildContext context) {
+  void _confirmCancel(BuildContext context, WidgetRef ref, String id) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -218,10 +222,15 @@ class ReservationDetailScreen extends ConsumerWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              // TODO: appel Supabase pour annuler
+              // On appelle Supabase pour annuler
+              ref.read(reservationsProvider.notifier).updateStatus(
+                id, 
+                ReservationStatus.cancelled
+              );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Réservation annulée')),
               );
+              context.go('/reservations'); // Retour à la liste
             },
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Oui, annuler'),
@@ -233,7 +242,7 @@ class ReservationDetailScreen extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────
-// HELPERS
+// HELPERS (inchangés)
 // ─────────────────────────────────────────
 class _DetailCard extends StatelessWidget {
   final IconData icon;
