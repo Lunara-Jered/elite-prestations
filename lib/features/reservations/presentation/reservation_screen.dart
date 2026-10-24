@@ -79,24 +79,30 @@ class _ReservationList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final reservationsState = ref.watch(reservationsProvider);
-    return reservationsState.when(
-      data: (_) {
-        final reservations = switch (type) {
-          _ListType.active => ref.watch(myActiveReservationsProvider),
-          _ListType.past => ref.watch(myPastReservationsProvider),
-          _ListType.cancelled => ref.watch(myCancelledReservationsProvider),
-        };
-        if (reservations.isEmpty) return _EmptyState(type: type);
+    // On choisit le bon provider en fonction de l'onglet sélectionné
+    final reservationsAsync = switch (type) {
+      _ListType.active => ref.watch(myActiveReservationsProvider),
+      _ListType.past => ref.watch(myPastReservationsProvider),
+      _ListType.cancelled => ref.watch(myCancelledReservationsProvider),
+    };
+
+    // On utilise .when pour gérer le chargement et les erreurs
+    return reservationsAsync.when(
+      data: (reservations) {
+        if (reservations.isEmpty) {
+          return _EmptyState(type: type);
+        }
+        
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: reservations.length,
           separatorBuilder: (context, index) => const SizedBox(height: 12),
           itemBuilder: (context, index) {
+            final reservation = reservations[index];
             return ReservationCard(
-              reservation: reservations[index],
+              reservation: reservation,
               onTap: () {
-                context.go('/reservations/${reservations[index].id}');
+                context.go('/reservations/${reservation.id}');
               },
             );
           },
@@ -104,16 +110,25 @@ class _ReservationList extends ConsumerWidget {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stackTrace) => Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Impossible de charger vos réservations : $error'),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () => ref.invalidate(reservationsProvider),
-              child: const Text('Réessayer'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: AppColors.error, size: 48),
+              const SizedBox(height: 16),
+              Text(
+                'Impossible de charger vos réservations :\n$error',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.error),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => ref.invalidate(reservationsProvider),
+                child: const Text('Réessayer'),
+              ),
+            ],
+          ),
         ),
       ),
     );
