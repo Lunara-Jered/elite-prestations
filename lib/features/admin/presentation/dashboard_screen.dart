@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../core/utils/currency.dart';
 import '../../../providers/invoices_provider.dart';
 import '../../../providers/reservations_provider.dart';
+import '../../../shared/models/reservation_model.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -13,13 +13,14 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(invoicesStatsProvider);
-    final reservations = ref.watch(activeReservationsProvider);
-    final reservationsState = ref.watch(reservationsProvider);
-    final invoicesState = ref.watch(invoicesProvider);
-    final invoices = invoicesState.value ?? const [];
+    // On utilise le provider global des réservations
+    final reservationsAsync = ref.watch(reservationsProvider);
+    final invoices = ref.watch(invoicesProvider);
 
-    return SafeArea(
-      child: ListView(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Tableau de bord')),
+      body: SafeArea(
+        child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
             // ─────────────────────────────────
@@ -45,26 +46,43 @@ class DashboardScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _KpiCard(
-                    value: '${reservations.length}',
-                    label: 'Réservations actives',
-                    icon: Icons.event_available,
-                    small: true,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _KpiCard(
-                    value: '${stats['invoiceCount'] ?? 0}',
-                    label: 'Factures',
-                    icon: Icons.receipt_long,
-                    small: true,
-                  ),
-                ),
-              ],
+            
+            // ─────────────────────────────────
+            // COMPTEURS
+            // ─────────────────────────────────
+            reservationsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Erreur: $err')),
+              data: (reservations) {
+                // On filtre les réservations actives
+                final activeCount = reservations.where((r) => 
+                  r.status == ReservationStatus.pending || 
+                  r.status == ReservationStatus.confirmed || 
+                  r.status == ReservationStatus.inProgress
+                ).length;
+
+                return Row(
+                  children: [
+                    Expanded(
+                      child: _KpiCard(
+                        value: '$activeCount',
+                        label: 'Réservations actives',
+                        icon: Icons.event_available,
+                        small: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _KpiCard(
+                        value: '${stats['invoiceCount'] ?? 0}',
+                        label: 'Factures',
+                        icon: Icons.receipt_long,
+                        small: true,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 24),
 
@@ -79,26 +97,23 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            if (reservationsState.isLoading)
-              const LinearProgressIndicator()
-            else if (reservationsState.hasError)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Impossible de charger les réservations : '
-                    '${reservationsState.error}',
-                  ),
-                  TextButton(
-                    onPressed: () => ref.invalidate(reservationsProvider),
-                    child: const Text('Réessayer'),
-                  ),
-                ],
-              )
-            else if (reservations.isEmpty)
-              const _EmptyCard(text: 'Aucune réservation active')
-            else
-              ...reservations.take(3).map(
+            reservationsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (err, stack) => Center(child: Text('Erreur: $err')),
+              data: (reservations) {
+                // On garde uniquement les réservations actives
+                final activeReservations = reservations.where((r) => 
+                  r.status == ReservationStatus.pending || 
+                  r.status == ReservationStatus.confirmed || 
+                  r.status == ReservationStatus.inProgress
+                ).toList();
+
+                if (activeReservations.isEmpty) {
+                  return _EmptyCard(text: 'Aucune réservation active');
+                }
+
+                return Column(
+                  children: activeReservations.take(3).map(
                     (r) => Container(
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(14),
@@ -137,7 +152,10 @@ class DashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                  ),
+                  ).toList(),
+                );
+              },
+            ),
 
             const SizedBox(height: 24),
 
@@ -152,22 +170,8 @@ class DashboardScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            if (invoicesState.isLoading)
-              const LinearProgressIndicator()
-            else if (invoicesState.hasError)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Impossible de charger les factures : '
-                      '${invoicesState.error}'),
-                  TextButton(
-                    onPressed: () => ref.invalidate(invoicesProvider),
-                    child: const Text('Réessayer'),
-                  ),
-                ],
-              )
-            else if (invoices.isEmpty)
-              const _EmptyCard(text: 'Aucune facture')
+            if (invoices.isEmpty)
+              _EmptyCard(text: 'Aucune facture')
             else
               ...invoices.take(3).map(
                     (inv) => Container(
@@ -229,7 +233,7 @@ class DashboardScreen extends ConsumerWidget {
                   child: _QuickAction(
                     icon: Icons.receipt_long,
                     label: 'Factures',
-                    onTap: () => context.go('/invoices'),
+                    onTap: () {},
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -237,19 +241,20 @@ class DashboardScreen extends ConsumerWidget {
                   child: _QuickAction(
                     icon: Icons.description_outlined,
                     label: 'Devis',
-                    onTap: () => context.go('/devis'),
+                    onTap: () {},
                   ),
                 ),
               ],
             ),
           ],
+        ),
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────
-// HELPERS
+// HELPERS (inchangés)
 // ─────────────────────────────────────────
 class _KpiCard extends StatelessWidget {
   final String value;
@@ -292,7 +297,7 @@ class _KpiCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.gray300,
               fontSize: 11,
             ),
