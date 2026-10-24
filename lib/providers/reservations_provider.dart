@@ -17,6 +17,7 @@ class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
       final isLocalAdmin =
           ref.watch(authProvider.select((auth) => auth.user?.role == 'ADMIN'));
       final userId = client.auth.currentUser?.id;
+      
       final data = isLocalAdmin
           ? await client.from('reservations').select().order(
                 'created_at',
@@ -27,6 +28,7 @@ class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
               .select()
               .eq('user_id', userId ?? '')
               .order('created_at', ascending: false);
+              
       return data
           .map((json) =>
               ReservationModel.fromJson(Map<String, dynamic>.from(json)))
@@ -141,56 +143,53 @@ class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
   }
 }
 
-final activeReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final all = ref.watch(reservationsProvider).value ?? const [];
-  return all
-      .where((reservation) =>
-          reservation.status == ReservationStatus.pending ||
-          reservation.status == ReservationStatus.confirmed ||
-          reservation.status == ReservationStatus.inProgress)
-      .toList();
+// ─────────────────────────────────────────
+// PROVIDERS DÉRIVÉS (Pour l'interface)
+// ─────────────────────────────────────────
+
+final activeReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
+  final all = ref.watch(reservationsProvider);
+  return all.whenData((list) => list.where((r) =>
+      r.status == ReservationStatus.pending ||
+      r.status == ReservationStatus.confirmed ||
+      r.status == ReservationStatus.inProgress).toList());
 });
 
-final myReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  if (!SupabaseConfig.isConfigured) return const [];
+final pastReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
+  final all = ref.watch(reservationsProvider);
+  return all.whenData((list) => list.where((r) => r.status == ReservationStatus.completed).toList());
+});
+
+final cancelledReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
+  final all = ref.watch(reservationsProvider);
+  return all.whenData((list) => list.where((r) => r.status == ReservationStatus.cancelled).toList());
+});
+
+// Réservations de l'utilisateur connecté
+final myReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
+  if (!SupabaseConfig.isConfigured) return const AsyncData([]);
   final userId = SupabaseService.client.auth.currentUser?.id;
-  if (userId == null) return const [];
-  return (ref.watch(reservationsProvider).value ?? const [])
-      .where((reservation) => reservation.clientId == userId)
-      .toList();
+  if (userId == null) return const AsyncData([]);
+  
+  final all = ref.watch(reservationsProvider);
+  return all.whenData((list) => 
+      list.where((r) => r.clientId == userId).toList());
 });
 
-final myActiveReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  return ref.watch(myReservationsProvider).where((reservation) =>
-      reservation.status == ReservationStatus.pending ||
-      reservation.status == ReservationStatus.confirmed ||
-      reservation.status == ReservationStatus.inProgress).toList();
+final myActiveReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
+  final all = ref.watch(myReservationsProvider);
+  return all.whenData((list) => list.where((r) =>
+      r.status == ReservationStatus.pending ||
+      r.status == ReservationStatus.confirmed ||
+      r.status == ReservationStatus.inProgress).toList());
 });
 
-final myPastReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  return ref
-      .watch(myReservationsProvider)
-      .where((reservation) => reservation.status == ReservationStatus.completed)
-      .toList();
+final myPastReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
+  final all = ref.watch(myReservationsProvider);
+  return all.whenData((list) => list.where((r) => r.status == ReservationStatus.completed).toList());
 });
 
-final myCancelledReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  return ref
-      .watch(myReservationsProvider)
-      .where((reservation) => reservation.status == ReservationStatus.cancelled)
-      .toList();
-});
-
-final pastReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final all = ref.watch(reservationsProvider).value ?? const [];
-  return all
-      .where((reservation) => reservation.status == ReservationStatus.completed)
-      .toList();
-});
-
-final cancelledReservationsProvider = Provider<List<ReservationModel>>((ref) {
-  final all = ref.watch(reservationsProvider).value ?? const [];
-  return all
-      .where((reservation) => reservation.status == ReservationStatus.cancelled)
-      .toList();
+final myCancelledReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
+  final all = ref.watch(myReservationsProvider);
+  return all.whenData((list) => list.where((r) => r.status == ReservationStatus.cancelled).toList());
 });
