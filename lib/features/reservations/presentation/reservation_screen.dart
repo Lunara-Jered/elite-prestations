@@ -79,14 +79,12 @@ class _ReservationList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // On choisit le bon provider en fonction de l'onglet sélectionné
     final reservationsAsync = switch (type) {
       _ListType.active => ref.watch(myActiveReservationsProvider),
       _ListType.past => ref.watch(myPastReservationsProvider),
       _ListType.cancelled => ref.watch(myCancelledReservationsProvider),
     };
 
-    // On utilise .when pour gérer le chargement et les erreurs
     return reservationsAsync.when(
       data: (reservations) {
         if (reservations.isEmpty) {
