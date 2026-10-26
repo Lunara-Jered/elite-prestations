@@ -75,20 +75,13 @@ class ReservationModel {
         'clientEmail': clientEmail,
       };
 
-  Map<String, dynamic> toSupabaseJson({required String? userId}) => {
-        'reference': reference,
+  Map<String, dynamic> toSupabaseJson({String? userId}) => {
+        'user_id': userId ?? Supabase.instance.client.auth.currentUser?.id,
         'service_name': serviceName,
-        'start_date': startDate.toIso8601String(),
-        'end_date': endDate.toIso8601String(),
+        'start_date': startDate.toIso8601String().split('T')[0], // Format YYYY-MM-DD pour le type 'date'
         'duration': duration,
         'total_ttc': totalTTC,
-        'deposit': deposit,
         'status': status.name,
-        'options': options.map((option) => option.toJson()).toList(),
-        'created_at': createdAt.toIso8601String(),
-        'user_id': userId,
-        'client_name': clientName,
-        'client_email': clientEmail,
       };
 
   factory ReservationModel.fromJson(Map<String, dynamic> json) =>
