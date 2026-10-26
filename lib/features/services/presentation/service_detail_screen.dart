@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/services_provider.dart';
+import '../../booking/providers/booking_provider.dart'; // <-- IMPORT AJOUTÉ
 
 class ServiceDetailScreen extends ConsumerWidget {
   final String slug;
@@ -67,36 +68,52 @@ class ServiceDetailScreen extends ConsumerWidget {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: AppColors.gray800,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    const Center(
-                      child: Icon(
-                        Icons.image_outlined,
-                        size: 64,
-                        color: AppColors.gray600,
-                      ),
-                    ),
-                    // Overlay gradient pour lisibilité
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black54],
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // IMAGE DYNAMIQUE ICI
+                  (service.imageUrl != null && service.imageUrl!.isNotEmpty)
+                      ? Image.network(
+                          service.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) => Container(
+                            color: AppColors.gray800,
+                            child: const Center(
+                              child: Icon(
+                                Icons.broken_image,
+                                size: 64,
+                                color: AppColors.gray600,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Container(
+                          color: AppColors.gray800,
+                          child: const Center(
+                            child: Icon(
+                              Icons.image_outlined,
+                              size: 64,
+                              color: AppColors.gray600,
+                            ),
+                          ),
                         ),
+                  // Overlay gradient pour lisibilité
+                  Container(
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black54],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
 
           // ─────────────────────────────────
-          // CONTENU
+          // CONTENU (Ton code existant reste identique)
           // ─────────────────────────────────
           SliverToBoxAdapter(
             child: Padding(
@@ -104,31 +121,20 @@ class ServiceDetailScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Titre
                   Text(
                     service.name,
-                    style:
-                        Theme.of(context).textTheme.headlineSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   const SizedBox(height: 8),
-
-                  // Note + capacité
                   Row(
                     children: [
-                      const Icon(Icons.star,
-                          size: 18, color: AppColors.warning),
+                      const Icon(Icons.star, size: 18, color: AppColors.warning),
                       const SizedBox(width: 4),
-                      Text(
-                        '4.9',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                      Text('4.9', style: Theme.of(context).textTheme.bodyMedium),
                       const SizedBox(width: 12),
-                      const Text(
-                        '•',
-                        style: TextStyle(color: AppColors.textMuted),
-                      ),
+                      const Text('•', style: TextStyle(color: AppColors.textMuted)),
                       const SizedBox(width: 12),
                       Text(
                         'Élite Prestations',
@@ -139,22 +145,13 @@ class ServiceDetailScreen extends ConsumerWidget {
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  // Prix
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: isLight
-                          ? AppColors.gray100
-                          : AppColors.surfaceDark,
+                      color: isLight ? AppColors.gray100 : AppColors.surfaceDark,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isLight
-                            ? AppColors.border
-                            : AppColors.borderDark,
+                        color: isLight ? AppColors.border : AppColors.borderDark,
                       ),
                     ),
                     child: Row(
@@ -162,32 +159,27 @@ class ServiceDetailScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Tarif',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.textMuted,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: AppColors.textMuted,
+                              ),
                         ),
                         Text(
                           service.basePrice > 0
                               ? 'Dès ${_formatPrice(service.basePrice)} / ${service.unit}'
                               : 'Sur devis',
-                          style:
-                              Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  // Description
                   Text(
                     'Description',
-                    style:
-                        Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -198,30 +190,21 @@ class ServiceDetailScreen extends ConsumerWidget {
                         ),
                   ),
                   const SizedBox(height: 32),
-
-                  // Divider
-                  Divider(
-                    color:
-                        isLight ? AppColors.border : AppColors.borderDark,
-                  ),
+                  Divider(color: isLight ? AppColors.border : AppColors.borderDark),
                   const SizedBox(height: 24),
-
-                  // Ce qui est inclus
                   Row(
                     children: [
                       const Icon(Icons.auto_awesome, size: 18),
                       const SizedBox(width: 8),
                       Text(
                         'Ce qui est inclus',
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-
                   ...service.features.map(
                     (f) => Padding(
                       padding: const EdgeInsets.only(bottom: 12),
@@ -233,17 +216,13 @@ class ServiceDetailScreen extends ConsumerWidget {
                             width: 20,
                             height: 20,
                             decoration: BoxDecoration(
-                              color: isLight
-                                  ? AppColors.primary
-                                  : AppColors.white,
+                              color: isLight ? AppColors.primary : AppColors.white,
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               Icons.check,
                               size: 14,
-                              color: isLight
-                                  ? AppColors.white
-                                  : AppColors.primary,
+                              color: isLight ? AppColors.white : AppColors.primary,
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -260,40 +239,6 @@ class ServiceDetailScreen extends ConsumerWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
-
-                  // Section disponibilité
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isLight
-                          ? AppColors.gray100
-                          : AppColors.surfaceDark,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: isLight
-                            ? AppColors.border
-                            : AppColors.borderDark,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, size: 20),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            'Vérifier la disponibilité',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
-                                ?.copyWith(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios, size: 14),
-                      ],
-                    ),
-                  ),
-
                   const SizedBox(height: 100), // espace pour la barre sticky
                 ],
               ),
@@ -324,28 +269,28 @@ class ServiceDetailScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    service.basePrice > 0
-                        ? _formatPrice(service.basePrice)
-                        : 'Sur devis',
-                    style:
-                        Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                    service.basePrice > 0 ? _formatPrice(service.basePrice) : 'Sur devis',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                   if (service.basePrice > 0)
                     Text(
                       '/ ${service.unit}',
-                      style:
-                          Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppColors.textMuted,
-                              ),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppColors.textMuted,
+                          ),
                     ),
                 ],
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
+                  // ACTION DU BOUTON RÉSERVER ICI
                   onPressed: () {
+                    // 1. On pré-sélectionne le service
+                    ref.read(bookingProvider.notifier).selectService(service);
+                    // 2. On lance le tunnel de réservation
                     context.go('/booking');
                   },
                   child: const Text('Réserver maintenant'),
