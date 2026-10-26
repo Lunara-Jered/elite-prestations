@@ -235,7 +235,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 // ─────────────────────────────────────────
 // TUILE SERVICE (version liste horizontale)
 // ─────────────────────────────────────────
-class _ServiceListTile extends StatelessWidget {
+class _ServiceListTile extends ConsumerWidget {
   final ServiceModel service;
   final VoidCallback onTap;
 
@@ -245,7 +245,7 @@ class _ServiceListTile extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+Widget build(BuildContext context, WidgetRef ref) {
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return GestureDetector(
