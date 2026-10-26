@@ -1,8 +1,21 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 
 import '../core/services/supabase_service.dart';
 import '../shared/models/reservation_model.dart';
 import 'auth_provider.dart';
+
+final deviceIdProvider = FutureProvider<String>((ref) async {
+  const preferenceKey = 'reservation_device_id';
+  final preferences = await SharedPreferences.getInstance();
+  final savedDeviceId = preferences.getString(preferenceKey);
+  if (savedDeviceId != null && savedDeviceId.isNotEmpty) return savedDeviceId;
+
+  final deviceId = Uuid().v4();
+  await preferences.setString(preferenceKey, deviceId);
+  return deviceId;
+});
 
 final reservationsProvider =
     AsyncNotifierProvider<ReservationsNotifier, List<ReservationModel>>(
@@ -16,7 +29,7 @@ class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
       final client = SupabaseService.client;
       final isLocalAdmin =
           ref.watch(authProvider.select((auth) => auth.user?.role == 'ADMIN'));
-      final userId = client.auth.currentUser?.id;
+        final deviceId = await ref.watch(deviceIdProvider.future);
       
       final data = isLocalAdmin
           ? await client.from('reservations').select().order(
@@ -26,7 +39,7 @@ class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
           : await client
               .from('reservations')
               .select()
-              .eq('user_id', userId ?? '')
+              .eq('client_id', deviceId)
               .order('created_at', ascending: false);
               
       return data
@@ -43,10 +56,10 @@ class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
     ReservationModel reservation,
   ) async {
     try {
-      final userId = SupabaseService.client.auth.currentUser?.id;
+      final deviceId = await ref.read(deviceIdProvider.future);
       final row = await SupabaseService.client
           .from('reservations')
-          .insert(reservation.toSupabaseJson(userId: userId))
+          .insert(reservation.toSupabaseJson(clientId: deviceId))
           .select()
           .single();
       final created = ReservationModel.fromJson(
@@ -101,12 +114,14 @@ class ReservationsNotifier extends AsyncNotifier<List<ReservationModel>> {
 
 final myReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {
   if (!SupabaseConfig.isConfigured) return const AsyncData([]);
-  final userId = SupabaseService.client.auth.currentUser?.id;
-  if (userId == null) return const AsyncData([]);
-  
+  final deviceId = ref.watch(deviceIdProvider);
   final all = ref.watch(reservationsProvider);
-  return all.whenData((list) => 
-      list.where((r) => r.clientId == userId).toList());
+  return deviceId.when(
+    data: (id) => all.whenData((list) =>
+        list.where((reservation) => reservation.clientId == id).toList()),
+    loading: () => const AsyncLoading(),
+    error: (error, stackTrace) => AsyncError(error, stackTrace),
+  );
 });
 
 final myActiveReservationsProvider = Provider<AsyncValue<List<ReservationModel>>>((ref) {

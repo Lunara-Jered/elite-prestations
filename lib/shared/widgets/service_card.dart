@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/utils/currency.dart';
@@ -18,6 +19,14 @@ class ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
+    final imagePath = service.imageUrl;
+    final serviceImageUrl = imagePath == null || imagePath.isEmpty
+      ? null
+      : imagePath.startsWith('http://') || imagePath.startsWith('https://')
+        ? imagePath
+        : Supabase.instance.client.storage
+          .from('services')
+          .getPublicUrl(imagePath);
 
     return GestureDetector(
       onTap: () => context.go('/services/${service.slug}'),
@@ -41,9 +50,9 @@ class ServiceCard extends StatelessWidget {
                 height: 120,
                 width: double.infinity,
                 color: isLight ? AppColors.gray100 : AppColors.gray800,
-                child: (service.imageUrl != null && service.imageUrl!.isNotEmpty)
+                child: serviceImageUrl != null
                     ? Image.network(
-                        service.imageUrl!,
+                    serviceImageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) => Icon(
                           Icons.broken_image,

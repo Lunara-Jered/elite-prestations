@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -234,26 +236,16 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     try {
       final createdReservation = await ref
           .read(reservationsProvider.notifier)
-          .createReservation(reservation);
+          .createReservation(reservation)
+          .timeout(const Duration(seconds: 5));
       savedReservation = createdReservation;
       await ref.read(invoicesProvider.notifier).addInvoice(invoice);
       invoiceSaved = true;
       ref.read(bookingProvider.notifier).reset();
       if (!context.mounted) return;
 
-      String? whatsappError;
-      try {
-        await WhatsAppService.sendReservationNotification(
-          AppStrings.whatsapp,
-          '${createdReservation.reference} - ${createdReservation.serviceName}, '
-          'du ${createdReservation.startDate.toLocal().toString().split(' ').first} '
-          'au ${createdReservation.endDate.toLocal().toString().split(' ').first}, '
-          'total ${createdReservation.totalTTC} FCFA, acompte '
-          '${createdReservation.deposit} FCFA.',
-        );
-      } catch (error) {
-        whatsappError = error.toString();
-      }
+      final whatsappError =
+          await _sendReservationWhatsApp(createdReservation);
 
       await showDialog<void>(
         context: context,
@@ -286,6 +278,20 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         ),
       );
       if (context.mounted) context.go('/reservations');
+    } on TimeoutException {
+      final whatsappError = await _sendReservationWhatsApp(reservation);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              whatsappError == null
+                  ? 'La demande a été envoyée sur WhatsApp. Elle sera synchronisée lorsque la connexion sera rétablie.'
+                  : 'Le délai Supabase est dépassé et WhatsApp n’a pas pu être ouvert : $whatsappError',
+            ),
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
     } catch (error) {
       Object reportedError = error;
       if (savedReservation != null && !invoiceSaved) {
@@ -310,6 +316,24 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<String?> _sendReservationWhatsApp(
+    ReservationModel reservation,
+  ) async {
+    try {
+      await WhatsAppService.sendReservationNotification(
+        AppStrings.whatsapp,
+        '${reservation.reference} - ${reservation.serviceName}, '
+        'du ${reservation.startDate.toLocal().toString().split(' ').first} '
+        'au ${reservation.endDate.toLocal().toString().split(' ').first}, '
+        'total ${reservation.totalTTC} FCFA, acompte '
+        '${reservation.deposit} FCFA.',
+      );
+      return null;
+    } catch (error) {
+      return error.toString();
     }
   }
 }

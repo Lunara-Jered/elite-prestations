@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/services_provider.dart';
@@ -39,6 +40,14 @@ class ServiceDetailScreen extends ConsumerWidget {
     }
     final service = matchingServices.first;
     final isLight = Theme.of(context).brightness == Brightness.light;
+    final imagePath = service.imageUrl;
+    final serviceImageUrl = imagePath == null || imagePath.isEmpty
+      ? null
+      : imagePath.startsWith('http://') || imagePath.startsWith('https://')
+        ? imagePath
+        : Supabase.instance.client.storage
+          .from('services')
+          .getPublicUrl(imagePath);
 
     return Scaffold(
       body: CustomScrollView(
@@ -72,9 +81,9 @@ class ServiceDetailScreen extends ConsumerWidget {
                 fit: StackFit.expand,
                 children: [
                   // IMAGE DYNAMIQUE ICI
-                  (service.imageUrl != null && service.imageUrl!.isNotEmpty)
+                    serviceImageUrl != null
                       ? Image.network(
-                          service.imageUrl!,
+                        serviceImageUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
                             color: AppColors.gray800,
