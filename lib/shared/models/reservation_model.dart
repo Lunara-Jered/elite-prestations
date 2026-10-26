@@ -1,5 +1,4 @@
 import '../../features/booking/providers/booking_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 enum ReservationStatus {
   pending,
@@ -76,8 +75,8 @@ class ReservationModel {
         'clientEmail': clientEmail,
       };
 
-  Map<String, dynamic> toSupabaseJson({String? userId}) => {
-        'user_id': userId ?? Supabase.instance.client.auth.currentUser?.id,
+    Map<String, dynamic> toSupabaseJson({required String clientId}) => {
+      'client_id': clientId,
         'service_name': serviceName,
         'start_date': startDate.toIso8601String().split('T')[0], // Format YYYY-MM-DD pour le type 'date'
         'duration': duration,
@@ -104,7 +103,8 @@ class ReservationModel {
             .toList(),
         createdAt:
             DateTime.parse((json['created_at'] ?? json['createdAt']) as String),
-        clientId: (json['user_id'] ?? json['clientId']) as String?,
+        clientId: (json['client_id'] ?? json['user_id'] ?? json['clientId'])
+          as String?,
         clientName: (json['client_name'] ?? json['clientName']) as String?,
         clientEmail: (json['client_email'] ?? json['clientEmail']) as String?,
       );
