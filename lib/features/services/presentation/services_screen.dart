@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_colors.dart';
 import '../../../providers/services_provider.dart';
+import '../../booking/providers/booking_provider.dart';
 
 class ServicesScreen extends ConsumerStatefulWidget {
   const ServicesScreen({super.key});
@@ -347,11 +348,13 @@ class _ServiceListTile extends StatelessWidget {
                                 ),
                       ),
                       ElevatedButton(
-                        onPressed: onTap,
+                        onPressed: () {
+                          ref.read(bookingProvider.notifier).selectService(service);
+                          context.go('/booking');
+                        },
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size(0, 40),
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
                         child: const Text('Réserver'),
                       ),
