@@ -42,8 +42,9 @@ class ServiceModel {
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) => ServiceModel(
         id: '${json['id']}',
-        name: json['name'] as String,
-        slug: json['slug'] as String,
+        // On ajoute un ?? '' pour éviter le crash si le name ou le slug est null
+        name: json['name'] as String? ?? 'Service sans nom',
+        slug: json['slug'] as String? ?? '',
         description: json['description'] as String? ?? '',
         features: (json['features'] as List<dynamic>? ?? const [])
             .map((feature) => feature.toString())
