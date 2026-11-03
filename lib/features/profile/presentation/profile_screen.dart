@@ -19,10 +19,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    final settings =
-        ref.read(localStorageServiceProvider).readObject('profile_settings');
-    _notificationsEnabled =
-        settings?['notificationsEnabled'] as bool? ?? true;
+    final settings = ref.read(localStorageServiceProvider).readObject('profile_settings');
+    _notificationsEnabled = settings?['notificationsEnabled'] as bool? ?? true;
   }
 
   Future<void> _setNotificationsEnabled(bool enabled) async {

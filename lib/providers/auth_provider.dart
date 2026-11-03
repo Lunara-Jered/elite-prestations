@@ -52,11 +52,15 @@ class AuthNotifier extends Notifier<AuthState> {
   @override
   AuthState build() {
     _storage = ref.read(localStorageServiceProvider);
+    
+    // Maintenant c'est synchrone !
     _credentials = _storage.readList(
       _accountsStorageKey,
-      _AuthCredential.fromJson,
+      (json) => _AuthCredential.fromJson(json),
     );
+    
     final currentUserJson = _storage.readObject(_currentUserStorageKey);
+    
     return AuthState(
       user: currentUserJson == null
           ? null
