@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart'; // <-- IMPORT AJOUTÉ POUR WHATSAPP
 
 import '../../../core/constants/app_colors.dart';
-import '../../../core/constants/app_strings.dart';
-import '../../../core/constants/company_info.dart';
-import '../../../core/services/whatsapp_service.dart';
 import '../../../providers/auth_provider.dart';
-import '../../../providers/invoices_provider.dart';
 import '../../../providers/reservations_provider.dart';
-import '../../../shared/models/invoice_model.dart';
 import '../../../shared/models/reservation_model.dart';
 import '../providers/booking_provider.dart';
 import 'widgets/booking_stepper_header.dart';
@@ -53,24 +49,13 @@ class BookingScreen extends ConsumerWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ─────────────────────────────────
-            // STEPPER HEADER (progression)
-            // ─────────────────────────────────
             BookingStepperHeader(currentStep: booking.currentStep),
-
-            // ─────────────────────────────────
-            // CONTENU DE L'ÉTAPE
-            // ─────────────────────────────────
             Expanded(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 child: _buildStepContent(booking.currentStep),
               ),
             ),
-
-            // ─────────────────────────────────
-            // BOUTON CONTINUER
-            // ─────────────────────────────────
             _BottomBar(booking: booking),
           ],
         ),
@@ -97,7 +82,7 @@ class BookingScreen extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────
-// BARRE INFÉRIEURE (bouton Continuer)
+// BARRE INFÉRIEURE
 // ─────────────────────────────────────────
 class _BottomBar extends ConsumerStatefulWidget {
   final BookingState booking;
@@ -135,7 +120,6 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
                     if (booking.currentStep < 5) {
                       ref.read(bookingProvider.notifier).nextStep();
                     } else {
-                      // Confirmation finale
                       _confirmBooking(context);
                     }
                   }
@@ -165,13 +149,12 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       return;
     }
 
-    // 1. On active le chargement sur le bouton
     setState(() => _isSubmitting = true);
 
     final now = DateTime.now();
     final id = now.microsecondsSinceEpoch.toString();
     
-    // 2. On prépare le message WhatsApp
+    // 1. Préparation du message WhatsApp
     final message = 'Bonjour Élite Prestations, je viens de faire une réservation.\n'
         'Service : ${service.name}\n'
         'Date : ${startDate.day}/${startDate.month}/${startDate.year}\n'
@@ -181,7 +164,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         
     final whatsappUrl = Uri.parse('https://wa.me/24162391121?text=${Uri.encodeComponent(message)}');
 
-    // 3. On ouvre WhatsApp immédiatement (avant Supabase)
+    // 2. Ouverture immédiate de WhatsApp
     try {
       if (await canLaunchUrl(whatsappUrl)) {
         await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
@@ -190,7 +173,7 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       debugPrint('Erreur WhatsApp : $e');
     }
 
-    // 4. On sauvegarde dans Supabase en arrière-plan
+    // 3. Sauvegarde dans Supabase
     try {
       final currentUser = ref.read(authProvider).user;
       
@@ -211,13 +194,10 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         clientEmail: currentUser?.email,
       );
 
-      // On envoie à Supabase
       await ref.read(reservationsProvider.notifier).createReservation(reservation);
 
-      // On nettoie le panier
       ref.read(bookingProvider.notifier).reset();
 
-      // 5. On affiche le message de succès
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -228,7 +208,6 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
         context.go('/reservations');
       }
     } catch (error) {
-      // Si Supabase échoue, on prévient l'utilisateur mais WhatsApp est déjà ouvert
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -241,3 +220,4 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
+} // <-- L'ACCOLADE MANQUANTE EST ICI
