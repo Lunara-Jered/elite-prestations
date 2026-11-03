@@ -17,6 +17,7 @@ import '../../features/auth/presentation/sign_up_screen.dart';
 import '../../features/booking/presentation/booking_screen.dart';
 import '../../features/invoices/presentation/invoice_list_screen.dart';
 import '../../features/invoices/presentation/devis_list_screen.dart';
+import '../../features/gallery/presentation/gallery_screen.dart';
 
 /// Clés de navigation globales (pour naviguer depuis n'importe où)
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -144,6 +145,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'profile',
             pageBuilder: (context, state) => const NoTransitionPage(
               child: ProfileScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/gallery', // <-- Nouvelle route
+            name: 'gallery',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: GalleryScreen(),
             ),
           ),
         ],

@@ -15,21 +15,20 @@ class MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  int _currentIndex = 0;
-
   static const List<String> _routes = [
     '/home',
     '/services',
-    '/reservations',
-  
+    '/gallery', // <-- Nouvelle route
   ];
 
   @override
   Widget build(BuildContext context) {
     final isLight = Theme.of(context).brightness == Brightness.light;
     final location = GoRouterState.of(context).uri.path;
-    final routeIndex = _routes.indexOf(location);
-    final currentIndex = routeIndex < 0 ? _currentIndex : routeIndex;
+    
+    // On calcule l'index actuel en fonction de l'URL
+    int currentIndex = _routes.indexWhere((route) => location.startsWith(route));
+    if (currentIndex == -1) currentIndex = 0;
 
     return Scaffold(
       body: widget.child,
@@ -47,21 +46,17 @@ class _MainShellState extends ConsumerState<MainShell> {
           child: BottomNavigationBar(
             currentIndex: currentIndex,
             onTap: (index) {
-              setState(() => _currentIndex = index);
               context.go(_routes[index]);
             },
             type: BottomNavigationBarType.fixed,
             backgroundColor: Colors.transparent,
             elevation: 0,
-            selectedItemColor:
-                isLight ? AppColors.primary : AppColors.white,
+            selectedItemColor: isLight ? AppColors.primary : AppColors.white,
             unselectedItemColor: AppColors.textMuted,
             selectedFontSize: 11,
             unselectedFontSize: 11,
-            selectedLabelStyle:
-                const TextStyle(fontWeight: FontWeight.w600),
-            unselectedLabelStyle:
-                const TextStyle(fontWeight: FontWeight.w500),
+            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
             items: const [
               BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
@@ -74,10 +69,10 @@ class _MainShellState extends ConsumerState<MainShell> {
                 label: AppStrings.navServices,
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_today_outlined),
-                activeIcon: Icon(Icons.calendar_today),
-                label: AppStrings.navReservations,
-              ),            
+                icon: Icon(Icons.photo_library_outlined), // Icône Galerie
+                activeIcon: Icon(Icons.photo_library),
+                label: 'Galerie', // Nouveau label
+              ),
             ],
           ),
         ),

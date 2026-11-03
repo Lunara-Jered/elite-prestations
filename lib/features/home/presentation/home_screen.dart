@@ -297,7 +297,7 @@ class _HeroCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         // Image de fond depuis Unsplash (libre de droits)
         image: const DecorationImage(
-          image: AssetImage(".../assets/images/about.jpg"),
+          image: AssetImage("assets/images/about.jpg"),
           fit: BoxFit.cover,
         ),
       ),
