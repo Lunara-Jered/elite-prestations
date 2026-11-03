@@ -39,7 +39,7 @@ class DevisNotifier extends Notifier<List<InvoiceModel>> {
   }
 
   Future<void> _save(List<InvoiceModel> devis) async {
-    await _storage.saveList(
+     _storage.saveList(
       _devisStorageKey,
       devis,
       (document) => document.toJson(),

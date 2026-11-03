@@ -53,7 +53,7 @@ class MessagesNotifier extends Notifier<List<MessageModel>> {
 
   Future<void> _append(MessageModel message) async {
     final updated = [...state, message];
-    await _storage.saveList(
+     _storage.saveList(
       _storageKey,
       updated,
       (item) => item.toJson(),

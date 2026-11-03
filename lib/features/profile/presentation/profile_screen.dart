@@ -27,7 +27,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final previousValue = _notificationsEnabled;
     setState(() => _notificationsEnabled = enabled);
     try {
-      await ref.read(localStorageServiceProvider).saveObject(
+      ref.read(localStorageServiceProvider).saveObject(
         'profile_settings',
         {'notificationsEnabled': enabled},
       );

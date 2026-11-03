@@ -110,12 +110,12 @@ class AuthNotifier extends Notifier<AuthState> {
         passwordHash: _hashPassword(user.id, password),
       );
       final updated = [..._credentials, credential];
-      await _storage.saveList(
+      _storage.saveList(
         _accountsStorageKey,
         updated,
         (account) => account.toJson(),
       );
-      await _storage.saveObject(_currentUserStorageKey, user.toJson());
+       _storage.saveObject(_currentUserStorageKey, user.toJson());
       _credentials = updated;
       state = AuthState(
         user: user,
@@ -156,7 +156,7 @@ class AuthNotifier extends Notifier<AuthState> {
       if (credential.passwordHash != _hashPassword(credential.user.id, password)) {
         throw StateError('Adresse e-mail ou mot de passe incorrect.');
       }
-      await _storage.saveObject(
+       _storage.saveObject(
         _currentUserStorageKey,
         credential.user.toJson(),
       );
@@ -173,7 +173,7 @@ class AuthNotifier extends Notifier<AuthState> {
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      await _storage.remove(_currentUserStorageKey);
+       _storage.remove(_currentUserStorageKey);
       state = AuthState(users: state.users);
     } catch (error) {
       state = state.copyWith(error: error.toString());
