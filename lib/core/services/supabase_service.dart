@@ -5,7 +5,7 @@ class SupabaseConfig {
 
   // On met les valeurs directement entre guillemets
   static const String url = 'https://yhxdvbguztnirevcwnlz.supabase.co';
-  static const String anonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InloeGR2Ymd1enRuaXJ2Y3dubHoiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc5Mjc1NzA5MCwiZXhwIjoyMTA4MzMzMDkwfQ.sYhIWKv-sA9emehx7ADh72auKV5nGsFrgEJBxkFbAfQ';
+  static const String anonKey = 'sb_publishable_ecwxOOA89_SJUcHBX0oKEQ_X0fNFsHe';
 
   static Object? initializationError;
 
