@@ -157,154 +157,83 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
     if (_isSubmitting) return;
     final service = widget.booking.selectedService;
     final startDate = widget.booking.startDate;
+    
     if (service == null || startDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Les informations de réservation sont incomplètes.')),
+        const SnackBar(content: Text('Informations de réservation incomplètes.')),
       );
       return;
     }
 
+    // 1. On active le chargement sur le bouton
     setState(() => _isSubmitting = true);
+
     final now = DateTime.now();
     final id = now.microsecondsSinceEpoch.toString();
-    final currentUser = ref.read(authProvider).user;
-    final clientName = currentUser?.name ?? 'Client invité';
-    final endDate = widget.booking.endDate ??
-        startDate.add(Duration(days: widget.booking.duration - 1));
-    final serviceQuantity =
-        service.unit == 'jour' || service.unit == 'nuit'
-            ? widget.booking.duration
-            : 1;
-    final lines = <InvoiceLine>[
-      InvoiceLine.create(
-        description: service.name,
-        quantity: serviceQuantity.toDouble(),
-        unitPrice: service.basePrice,
-        tpsRate: CompanyInfo.tpsRate,
-      ),
-      ...widget.booking.options.where((option) => option.quantity > 0).map(
-            (option) => InvoiceLine.create(
-              description: option.name,
-              quantity: option.quantity.toDouble(),
-              unitPrice: option.unitPrice,
-              tpsRate: CompanyInfo.tpsRate,
-            ),
-          ),
-    ];
-    final reservation = ReservationModel(
-      id: id,
-      reference:
-          'RES-${now.year}-${id.substring(id.length - 6).padLeft(6, '0')}',
-      serviceName: service.name,
-      startDate: startDate,
-      endDate: endDate,
-      duration: widget.booking.duration,
-      totalTTC: widget.booking.totalTTC,
-      deposit: widget.booking.deposit,
-      status: ReservationStatus.pending,
-      options: widget.booking.options,
-      createdAt: now,
-      clientId: currentUser?.id,
-      clientName: clientName,
-      clientEmail: currentUser?.email,
-    );
-    final invoice = InvoiceModel(
-      id: 'INV-$id',
-      number:
-          'FACT-${now.year}${now.month.toString().padLeft(2, '0')}-${id.substring(id.length - 6)}',
-      type: DocumentType.facture,
-      clientName: clientName,
-      clientEmail: currentUser?.email,
-      clientPhone: currentUser?.phone,
-      issueDate: now,
-      dueDate: now.add(const Duration(days: 30)),
-      lines: lines,
-      subtotalHT: widget.booking.subtotalHT,
-      tps: widget.booking.tps,
-      totalTTC: widget.booking.totalTTC,
-      invoiceStatus: widget.booking.deposit >= widget.booking.totalTTC
-          ? InvoiceStatus.paid
-          : InvoiceStatus.partial,
-      notes: 'Acompte : ${widget.booking.deposit} FCFA',
-      createdAt: now,
-    );
+    
+    // 2. On prépare le message WhatsApp
+    final message = 'Bonjour Élite Prestations, je viens de faire une réservation.\n'
+        'Service : ${service.name}\n'
+        'Date : ${startDate.day}/${startDate.month}/${startDate.year}\n'
+        'Durée : ${widget.booking.duration} jour(s)\n'
+        'Total TTC : ${widget.booking.totalTTC} FCFA\n'
+        'Acompte : ${widget.booking.deposit} FCFA';
+        
+    final whatsappUrl = Uri.parse('https://wa.me/24162391121?text=${Uri.encodeComponent(message)}');
 
-    ReservationModel? savedReservation;
-    var invoiceSaved = false;
+    // 3. On ouvre WhatsApp immédiatement (avant Supabase)
     try {
-      final createdReservation = await ref
-          .read(reservationsProvider.notifier)
-          .createReservation(reservation);
-      savedReservation = createdReservation;
-      await ref.read(invoicesProvider.notifier).addInvoice(invoice);
-      invoiceSaved = true;
-      ref.read(bookingProvider.notifier).reset();
-      if (!context.mounted) return;
-
-      String? whatsappError;
-      try {
-        await WhatsAppService.sendReservationNotification(
-          AppStrings.whatsapp,
-          '${createdReservation.reference} - ${createdReservation.serviceName}, '
-          'du ${createdReservation.startDate.toLocal().toString().split(' ').first} '
-          'au ${createdReservation.endDate.toLocal().toString().split(' ').first}, '
-          'total ${createdReservation.totalTTC} FCFA, acompte '
-          '${createdReservation.deposit} FCFA.',
-        );
-      } catch (error) {
-        whatsappError = error.toString();
+      if (await canLaunchUrl(whatsappUrl)) {
+        await launchUrl(whatsappUrl, mode: LaunchMode.externalApplication);
       }
+    } catch (e) {
+      debugPrint('Erreur WhatsApp : $e');
+    }
 
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (dialogContext) => AlertDialog(
-          icon: const Icon(Icons.check_circle_outline),
-          title: const Text('Réservation enregistrée'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Votre réservation ${createdReservation.reference} est enregistrée. '
-                'La facture ${invoice.number} est disponible dans votre espace.',
-              ),
-              const SizedBox(height: 8),
-              Text(
-                whatsappError == null
-                    ? 'WhatsApp est ouvert avec le récapitulatif. Appuyez sur Envoyer pour transmettre le message.'
-                    : 'La réservation est enregistrée, mais WhatsApp n’a pas pu être ouvert : $whatsappError',
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Voir mes réservations'),
-            ),
-          ],
-        ),
+    // 4. On sauvegarde dans Supabase en arrière-plan
+    try {
+      final currentUser = ref.read(authProvider).user;
+      
+      final reservation = ReservationModel(
+        id: id,
+        reference: 'RES-${now.year}-${id.substring(id.length - 4)}',
+        serviceName: service.name,
+        startDate: startDate,
+        endDate: widget.booking.endDate ?? startDate.add(Duration(days: widget.booking.duration - 1)),
+        duration: widget.booking.duration,
+        totalTTC: widget.booking.totalTTC,
+        deposit: widget.booking.deposit,
+        status: ReservationStatus.pending,
+        options: widget.booking.options,
+        createdAt: now,
+        clientId: currentUser?.id,
+        clientName: currentUser?.name ?? 'Client invité',
+        clientEmail: currentUser?.email,
       );
-      if (context.mounted) context.go('/reservations');
-    } catch (error) {
-      Object reportedError = error;
-      if (savedReservation != null && !invoiceSaved) {
-        try {
-          await ref
-              .read(reservationsProvider.notifier)
-              .removeReservation(savedReservation.id);
-        } catch (cleanupError) {
-          reportedError = StateError(
-            '$error. Le nettoyage de la réservation a également échoué : $cleanupError',
-          );
-        }
+
+      // On envoie à Supabase
+      await ref.read(reservationsProvider.notifier).createReservation(reservation);
+
+      // On nettoie le panier
+      ref.read(bookingProvider.notifier).reset();
+
+      // 5. On affiche le message de succès
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Réservation enregistrée avec succès !'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/reservations');
       }
+    } catch (error) {
+      // Si Supabase échoue, on prévient l'utilisateur mais WhatsApp est déjà ouvert
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Impossible de confirmer la réservation : $reportedError',
-            ),
+            content: Text('Erreur de sauvegarde : $error'),
+            backgroundColor: Colors.red,
           ),
         );
       }
@@ -312,4 +241,3 @@ class _BottomBarState extends ConsumerState<_BottomBar> {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
-}
