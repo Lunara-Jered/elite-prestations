@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_strings.dart';
 import '../../../providers/services_provider.dart';
-import '../../../providers/gallery_provider.dart'; // Assure-toi d'avoir créé ce provider
+import '../../../providers/gallery_provider.dart'; 
 import '../../../shared/widgets/service_card.dart';
 import '../../../shared/widgets/whatsapp_button.dart';
 
@@ -297,7 +297,7 @@ class _HeroCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         // Image de fond depuis Unsplash (libre de droits)
         image: const DecorationImage(
-          image: NetworkImage('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=1000&auto=format&fit=crop'),
+          image: AssetImage(".../assets/images/about.jpg"),
           fit: BoxFit.cover,
         ),
       ),
