@@ -35,6 +35,7 @@ dependencies:
   image: ^4.3.0
   mock_supabase_http_client: ^0.0.3+2
   flutter_launcher_icons: ^0.14.4
+  uuid: ^4.3.3
 dependency_overrides:
   archive: ^4.5.2
   
