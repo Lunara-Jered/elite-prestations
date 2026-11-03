@@ -245,7 +245,7 @@ class _ServiceListTile extends ConsumerWidget {
   });
 
   @override
-Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isLight = Theme.of(context).brightness == Brightness.light;
 
     return GestureDetector(
@@ -263,22 +263,31 @@ Widget build(BuildContext context, WidgetRef ref) {
           children: [
             // Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(16),
-              ),
-              child: Container(
-                height: 160,
-                width: double.infinity,
-                color: isLight ? AppColors.gray100 : AppColors.gray800,
-                child: Center(
-                  child: Icon(
-                    Icons.image_outlined,
-                    size: 48,
-                    color: isLight ? AppColors.gray400 : AppColors.gray600,
-                  ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Container(
+                  height: 160,
+                  width: double.infinity,
+                  color: isLight ? AppColors.gray100 : AppColors.gray800,
+                  // VÉRIFICATION DE L'IMAGE ICI :
+                  child: (service.imageUrl != null && service.imageUrl!.isNotEmpty)
+                      ? Image.network(
+                          service.imageUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(Icons.broken_image, size: 48),
+                            );
+                          },
+                        )
+                      : Center(
+                          child: Icon(
+                            Icons.image_outlined,
+                            size: 48,
+                            color: isLight ? AppColors.gray400 : AppColors.gray600,
+                          ),
+                        ),
                 ),
               ),
-            ),
 
             // Contenu
             Padding(
