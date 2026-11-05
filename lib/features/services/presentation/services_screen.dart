@@ -31,34 +31,34 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
   List<ServiceModel> _applyFilters(List<ServiceModel> services) {
     var filtered = services;
 
-    // Filtre par catégorie
+    // Filtre par catégorie (recherche dans le nom ou la description)
     if (_selectedFilter != 'Tous') {
       filtered = filtered.where((s) {
+        final textToSearch = '${s.name} ${s.description}'.toLowerCase();
+        
         switch (_selectedFilter) {
           case 'Salle':
-            return s.slug.contains('salle');
+            return textToSearch.contains('salle');
           case 'Mariage':
-            return s.slug.contains('mariage');
+            return textToSearch.contains('mariage');
           case 'Séjour':
-            return s.slug.contains('appartement');
+            return textToSearch.contains('appartement') || textToSearch.contains('séjour');
           case 'Pro':
-            return s.slug.contains('pro') || s.slug.contains('nettoyage');
+            return textToSearch.contains('pro') || textToSearch.contains('nettoyage') || textToSearch.contains('entreprise');
           case 'Transport':
-            return s.slug.contains('transport');
+            return textToSearch.contains('transport');
           default:
             return true;
         }
       }).toList();
     }
 
-    // Filtre par recherche
+    // Filtre par recherche manuelle
     if (_searchQuery.isNotEmpty) {
       filtered = filtered
           .where((s) =>
               s.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              s.description
-                  .toLowerCase()
-                  .contains(_searchQuery.toLowerCase()))
+              s.description.toLowerCase().contains(_searchQuery.toLowerCase()))
           .toList();
     }
 
@@ -90,8 +90,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   hintText: 'Rechercher un service…',
                   prefixIcon: const Icon(Icons.search, size: 20),
                   filled: true,
-                  fillColor:
-                      isLight ? AppColors.surface : AppColors.surfaceDark,
+                  fillColor: isLight ? AppColors.surface : AppColors.surfaceDark,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -117,7 +116,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
             ),
 
             // ─────────────────────────────────
-            // FILTRES
+            // FILTRES (ONGLETS)
             // ─────────────────────────────────
             SizedBox(
               height: 40,
@@ -125,8 +124,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 itemCount: _filters.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(width: 8),
+                separatorBuilder: (context, index) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final filter = _filters[index];
                   final isSelected = _selectedFilter == filter;
@@ -144,18 +142,12 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                       decoration: BoxDecoration(
                         color: isSelected
                             ? (isLight ? AppColors.primary : AppColors.white)
-                            : (isLight
-                                ? AppColors.surface
-                                : AppColors.surfaceDark),
+                            : (isLight ? AppColors.surface : AppColors.surfaceDark),
                         borderRadius: BorderRadius.circular(999),
                         border: Border.all(
                           color: isSelected
-                              ? (isLight
-                                  ? AppColors.primary
-                                  : AppColors.white)
-                              : (isLight
-                                  ? AppColors.border
-                                  : AppColors.borderDark),
+                              ? (isLight ? AppColors.primary : AppColors.white)
+                              : (isLight ? AppColors.border : AppColors.borderDark),
                         ),
                       ),
                       child: Center(
@@ -163,15 +155,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                           filter,
                           style: TextStyle(
                             color: isSelected
-                                ? (isLight
-                                    ? AppColors.white
-                                    : AppColors.primary)
-                                : (isLight
-                                    ? AppColors.textPrimary
-                                    : AppColors.textOnDark),
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w500,
+                                ? (isLight ? AppColors.white : AppColors.primary)
+                                : (isLight ? AppColors.textPrimary : AppColors.textOnDark),
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                             fontSize: 13,
                           ),
                         ),
@@ -191,11 +177,11 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 data: (serviceList) {
                   final filtered = _applyFilters(serviceList);
                   if (filtered.isEmpty) return _EmptySearch();
+                  
                   return ListView.separated(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                     itemCount: filtered.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 16),
+                    separatorBuilder: (context, index) => const SizedBox(height: 16),
                     itemBuilder: (context, index) {
                       final service = filtered[index];
                       return _ServiceListTile(
@@ -207,9 +193,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     },
                   );
                 },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stackTrace) => Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -233,7 +217,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
 }
 
 // ─────────────────────────────────────────
-// TUILE SERVICE (version liste horizontale)
+// TUILE SERVICE (version liste)
 // ─────────────────────────────────────────
 class _ServiceListTile extends ConsumerWidget {
   final ServiceModel service;
@@ -263,31 +247,28 @@ class _ServiceListTile extends ConsumerWidget {
           children: [
             // Image
             ClipRRect(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                child: Container(
-                  height: 160,
-                  width: double.infinity,
-                  color: isLight ? AppColors.gray100 : AppColors.gray800,
-                  // VÉRIFICATION DE L'IMAGE ICI :
-                  child: (service.imageUrl != null && service.imageUrl!.isNotEmpty)
-                      ? Image.network(
-                          service.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(Icons.broken_image, size: 48),
-                            );
-                          },
-                        )
-                      : Center(
-                          child: Icon(
-                            Icons.image_outlined,
-                            size: 48,
-                            color: isLight ? AppColors.gray400 : AppColors.gray600,
-                          ),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: Container(
+                height: 160,
+                width: double.infinity,
+                color: isLight ? AppColors.gray100 : AppColors.gray800,
+                child: (service.imageUrl != null && service.imageUrl!.isNotEmpty)
+                    ? Image.network(
+                        service.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          return const Center(child: Icon(Icons.broken_image, size: 48));
+                        },
+                      )
+                    : Center(
+                        child: Icon(
+                          Icons.image_outlined,
+                          size: 48,
+                          color: isLight ? AppColors.gray400 : AppColors.gray600,
                         ),
-                ),
+                      ),
               ),
+            ),
 
             // Contenu
             Padding(
@@ -321,18 +302,13 @@ class _ServiceListTile extends ConsumerWidget {
                               Icon(
                                 Icons.check,
                                 size: 14,
-                                color: isLight
-                                    ? AppColors.primary
-                                    : AppColors.white,
+                                color: isLight ? AppColors.primary : AppColors.white,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   f,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                         color: AppColors.textMuted,
                                       ),
                                 ),
@@ -351,10 +327,9 @@ class _ServiceListTile extends ConsumerWidget {
                         service.basePrice > 0
                             ? 'Dès ${_formatPrice(service.basePrice)}'
                             : 'Sur devis',
-                        style:
-                            Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                       ),
                       ElevatedButton(
                         onPressed: () {
@@ -390,7 +365,7 @@ class _ServiceListTile extends ConsumerWidget {
 }
 
 // ─────────────────────────────────────────
-// ÉTAT VIDE (recherche sans résultats)
+// ÉTAT VIDE
 // ─────────────────────────────────────────
 class _EmptySearch extends StatelessWidget {
   @override
@@ -399,11 +374,7 @@ class _EmptySearch extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
-            Icons.search_off,
-            size: 64,
-            color: AppColors.textMuted,
-          ),
+          const Icon(Icons.search_off, size: 64, color: AppColors.textMuted),
           const SizedBox(height: 16),
           Text(
             'Aucun service trouvé',
@@ -411,7 +382,7 @@ class _EmptySearch extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Essayez un autre mot-clé',
+            'Essayez une autre catégorie',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppColors.textMuted,
                 ),

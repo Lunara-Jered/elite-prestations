@@ -14,14 +14,18 @@ class GalleryModel {
   });
 
   factory GalleryModel.fromJson(Map<String, dynamic> json) {
-    return GalleryModel(
-      id: json['id'],
-      // On récupère l'URL publique de l'image depuis Supabase Storage
-      imageUrl: Supabase.instance.client.storage
-          .from('gallery')
-          .getPublicUrl(json['image_url']),
-      category: json['category'] ?? 'Général',
-      caption: json['caption'],
-    );
-  }
+  final rawUrl = json['image_url'] as String? ?? '';
+  
+  // Si l'URL est déjà complète, on la garde. Sinon, on la construit.
+  final finalUrl = rawUrl.startsWith('http') 
+      ? rawUrl 
+      : Supabase.instance.client.storage.from('gallery').getPublicUrl(rawUrl);
+
+  return GalleryModel(
+    id: json['id'],
+    imageUrl: finalUrl,
+    category: json['category'] ?? 'Général',
+    caption: json['caption'],
+  );
+}
 }
